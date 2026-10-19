@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Master - Monitoring & Rekapitulasi Khutbah Jum'at SMA YWKA</title>
+  <meta name="description" content="Dashboard master guru dan wali kelas untuk memantau, memeriksa, dan menilai tugas rangkuman khutbah Jum'at siswa SMA YWKA per kelas.">
+  <link rel="icon" type="image/png" href="assets/logo-ywka.png">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <header class="top-announcement">
+    <div class="container top-announcement-content">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="announcement-badge">PORTAL MASTER</span>
+        <span>Dashboard Pengajar & Wali Kelas • SMA YWKA</span>
+      </div>
+      <div class="top-actions">
+        <button id="btnOpenDbModal" class="theme-toggle-btn" title="Pengaturan Database Cloud Supabase" style="border: 1px solid rgba(255,255,255,0.25);">
+          ⚡ Database: <span id="dbStatusBadge" style="font-weight: 800; color: #fef08a;">Lokal</span>
+        </button>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Beralih Mode Gelap/Terang">
+          🌙 Mode Gelap
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky Navbar -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <div class="brand-wrapper">
+        <img src="assets/logo-ywka.png" alt="Logo SMA YWKA" class="brand-logo-img">
+        <div class="brand-info">
+          <h1>KhatibKu <span style="display:inline; color: var(--ywka-orange);">Master</span></h1>
+          <span>Monitoring & Rekapitulasi Per Kelas</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div class="nav-tabs" role="tablist">
+          <button class="nav-tab-btn active" data-tab="rekap" role="tab">
+            📋 Rekap Per Kelas
+          </button>
+          <button class="nav-tab-btn" data-tab="statistik" role="tab">
+            📊 Progres & Nilai
+          </button>
+        </div>
+
+        <span class="portal-badge master">👨‍🏫 Portal Master / Guru</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Header Banner -->
+  <section class="hero-banner">
+    <div class="container hero-content">
+      <div class="hero-text">
+        <h2>Dashboard Rekapitulasi Rangkuman Jum'at</h2>
+        <p>Memantau kehadiran dan isi rangkuman khutbah Jum'at dari seluruh siswa SMA YWKA berdasarkan masing-masing kelas secara terpusat.</p>
+      </div>
+
+      <!-- Quick Metrics Counters -->
+      <div class="hero-stats-quick">
+        <div class="stat-chip">
+          <div class="stat-chip-icon blue">📥</div>
+          <div class="stat-chip-info">
+            <span>Total Masuk</span>
+            <strong id="statTotalSubmissions">0</strong>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon orange">⭐</div>
+          <div class="stat-chip-info">
+            <span>Sudah Dinilai</span>
+            <strong id="statTotalGraded">0</strong>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon green">📈</div>
+          <div class="stat-chip-info">
+            <span>Rata-Rata Nilai</span>
+            <strong id="statAvgScore">0.0</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Area -->
+  <main class="main-wrapper">
+    <div class="container">
+
+      <!-- ===================================================================
+           TAB 1: REKAPITULASI BERDASARKAN MASING-MASING KELAS
+           =================================================================== -->
+      <div id="tab-rekap" class="tab-panel active" role="tabpanel">
+        
+        <!-- Pilihan Filter Kelas (Pills) -->
+        <div class="card" style="padding: 20px 24px;">
+          <div class="class-filter-title">
+            <span style="color: var(--ywka-blue);">🏷️ Kelompokkan Berdasarkan Kelas:</span>
+            <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">Klik kelas untuk menyaring data siswa</span>
+          </div>
+          <div id="classPillsContainer" class="class-pills-list">
+            <!-- Diisi otomatis oleh JavaScript -->
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls Toolbar -->
+        <div class="filter-toolbar">
+          <div class="search-box-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="tableSearchInput" class="input-field" placeholder="Cari nama siswa, masjid, atau judul khutbah...">
+          </div>
+
+          <div class="filter-group-right">
+            <!-- Filter Tanggal Jum'at -->
+            <select id="filterFridayDate" class="select-field" style="width: auto; min-width: 190px;">
+              <option value="all">📅 Semua Tanggal Jum'at</option>
+            </select>
+
+            <!-- Filter Status Penilaian -->
+            <select id="filterStatus" class="select-field" style="width: auto; min-width: 160px;">
+              <option value="all">⚡ Semua Status</option>
+              <option value="pending">⏳ Menunggu Penilaian</option>
+              <option value="graded">✅ Sudah Dinilai</option>
+            </select>
+
+            <!-- Export Excel Button -->
+            <button id="btnExportCSV" class="btn btn-secondary" title="Ekspor data kelas terpilih ke file CSV / Excel">
+              📥 Unduh Excel
+            </button>
+
+            <!-- Cetak Laporan Button -->
+            <button id="btnPrintReport" class="btn btn-primary" title="Cetak lembar penilaian resmi ber-kop SMA YWKA">
+              🖨️ Cetak Lembar Nilai
+            </button>
+          </div>
+        </div>
+
+        <!-- Indikator Jumlah Data -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 0.88rem; color: var(--text-muted);">
+          <div id="filteredResultCount">Menampilkan 0 data rangkuman</div>
+          <div>Klik tombol <strong>Periksa</strong> untuk membaca tugas lengkap & memberikan nilai.</div>
+        </div>
+
+        <!-- Tabel Rekapitulasi Rangkuman Siswa -->
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align: center;">No</th>
+                <th>Nama Siswa & NISN</th>
+                <th style="text-align: center;">Kelas</th>
+                <th>Tanggal Jum'at</th>
+                <th>Masjid & Khatib</th>
+                <th>Tema Khutbah</th>
+                <th style="text-align: center;">Foto</th>
+                <th style="text-align: center;">Status</th>
+                <th style="text-align: center;">Nilai</th>
+                <th style="text-align: center; width: 100px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="summariesTableBody">
+              <!-- Baris tabel di-generate secara dinamis -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State jika tidak ada data -->
+        <div id="emptyStateTable" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">📭</div>
+          <h3>Tidak Ada Data Rangkuman</h3>
+          <p>Belum ada tugas siswa yang dikumpulkan untuk saringan kelas atau tanggal yang Anda pilih.</p>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================
+           TAB 2: MONITORING PROGRES & KEAKTIFAN PER KELAS
+           =================================================================== -->
+      <div id="tab-statistik" class="tab-panel" role="tabpanel">
+        <div class="card-header" style="margin-bottom: 24px;">
+          <div>
+            <h3 class="card-title">📊 Tingkat Partisipasi Pengumpulan Per Kelas</h3>
+            <p class="card-subtitle">Persentase pengumpulan tugas rangkuman khutbah Jum'at terhadap kuota kelas (32 siswa/kelas).</p>
+          </div>
+        </div>
+
+        <!-- Grid Progress Per Kelas -->
+        <div id="classProgressGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px;">
+          <!-- Diisi otomatis oleh JavaScript -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===================================================================
+       MODAL: PERIKSA & BERI NILAI TUGAS (UNTUK GURU)
+       =================================================================== -->
+  <div id="reviewModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 id="modalStudentName">Detail Rangkuman Siswa</h3>
+          <div id="modalStudentMeta" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></div>
+        </div>
+        <button class="modal-close-btn" onclick="AdminApp.closeReviewModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Info Pelaksanaan -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+          <div class="detail-item-box" style="margin-bottom: 0;">
+            <div class="detail-item-title">🕌 Lokasi Masjid</div>
+            <div id="modalMosqueInfo" class="detail-item-content">-</div>
+          </div>
+          <div class="detail-item-box" style="margin-bottom: 0;">
+            <div class="detail-item-title">📅 Tanggal & Khatib</div>
+            <div id="modalDateInfo" style="font-weight: 700; color: var(--ywka-blue);"></div>
+            <div id="modalKhatibInfo" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+          </div>
+        </div>
+
+        <!-- Tema Khutbah -->
+        <div class="detail-item-box">
+          <div class="detail-item-title">📌 Tema / Judul Khutbah</div>
+          <div id="modalKhutbahTitle" class="detail-item-content" style="font-weight: 700; font-size: 1.05rem;">-</div>
+        </div>
+
+        <!-- Dalil -->
+        <div class="detail-item-box" style="border-left-color: var(--ywka-orange);">
+          <div class="detail-item-title">📖 Dalil Al-Qur'an / Hadits</div>
+          <div id="modalQuranHadith" class="detail-item-content" style="font-style: italic;">-</div>
+        </div>
+
+        <!-- Uraian Rangkuman -->
+        <div class="detail-item-box">
+          <div class="detail-item-title">📝 Isi Rangkuman Khutbah</div>
+          <div id="modalSummaryText" class="detail-item-content">-</div>
+        </div>
+
+        <!-- Aksi Nyata -->
+        <div class="detail-item-box" style="border-left-color: var(--ywka-green);">
+          <div class="detail-item-title">🌱 Pesan Moral & Aksi Nyata Siswa</div>
+          <div id="modalMoralAction" class="detail-item-content">-</div>
+        </div>
+
+        <!-- Foto Bukti -->
+        <div id="modalPhotoWrapper" class="detail-item-box" style="display: none;">
+          <div class="detail-item-title">📷 Foto Bukti Kehadiran / Dokumentasi</div>
+          <div style="margin-top: 8px; text-align: center;">
+            <img id="modalPhotoImg" src="" alt="Foto Bukti Siswa" style="max-width: 100%; max-height: 320px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
+          </div>
+        </div>
+
+        <!-- Box Penilaian Guru -->
+        <div class="grading-card">
+          <h4 style="margin-bottom: 12px; color: var(--ywka-blue); font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+            <span>✍️</span> Lembar Penilaian & Umpan Balik Guru
+          </h4>
+          
+          <div style="display: grid; grid-template-columns: 140px 1fr; gap: 14px; margin-bottom: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="modalInputScore">Nilai (0-100)</label>
+              <input type="number" id="modalInputScore" class="input-field" min="0" max="100" placeholder="90" style="font-size: 1.1rem; font-weight: 700; text-align: center;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="modalSelectStatus">Status Penilaian</label>
+              <select id="modalSelectStatus" class="select-field">
+                <option value="graded">✅ Sudah Dinilai (Selesai)</option>
+                <option value="pending">⏳ Masih Menunggu</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modalInputFeedback">Catatan Guru / Umpan Balik</label>
+            <textarea id="modalInputFeedback" class="textarea-field" style="min-height: 80px;" placeholder="Tuliskan apresiasi atau koreksi untuk siswa..."></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btnDeleteSummary" class="btn btn-secondary" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+          🗑️ Hapus Laporan
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="AdminApp.closeReviewModal()">
+          Batal
+        </button>
+        <button type="button" id="btnSaveGrading" class="btn btn-primary">
+          💾 Simpan Nilai & Catatan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: KEAMANAN PIN AKSES GURU
+       =================================================================== -->
+  <div id="authModal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 420px; text-align: center;">
+      <div class="modal-body" style="padding: 32px 24px;">
+        <img src="assets/logo-ywka.png" alt="SMA YWKA" style="height: 60px; margin-bottom: 12px;">
+        <h3 style="color: var(--ywka-blue); margin-bottom: 6px;">Portal Master Guru</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+          Masukkan PIN Guru / Wali Kelas untuk membuka dashboard rekapitulasi nilai.
+        </p>
+
+        <div class="form-group" style="text-align: left; margin-bottom: 14px;">
+          <label class="form-label" for="inputAdminPin">PIN Akses Pengajar</label>
+          <input type="password" id="inputAdminPin" class="input-field" placeholder="Masukkan PIN (Default: ywka2026)" style="font-size: 1.1rem; text-align: center; letter-spacing: 2px;">
+          <div id="pinError" style="font-size: 0.8rem; color: #ef4444; margin-top: 4px; display: none;"></div>
+        </div>
+
+        <button type="button" id="btnSubmitPin" class="btn btn-primary" style="width: 100%; padding: 12px; margin-top: 8px;">
+          🔓 Buka Dashboard Master
+        </button>
+
+        <div style="margin-top: 16px;">
+          <a href="index.html" style="font-size: 0.8rem; color: var(--text-muted); text-decoration: underline;">
+            ⬅️ Kembali ke Halaman Form Siswa
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: PENGATURAN DATABASE SUPABASE CLOUD
+       =================================================================== -->
+  <div id="dbModal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 580px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.5rem;">⚡</span>
+          <div>
+            <h3>Pengaturan Database Supabase Cloud</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Sinkronisasi data siswa dari cloud database Supabase</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="AdminApp.closeDbModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" for="inputSupabaseUrl">
+            Project URL <span class="required">*</span>
+          </label>
+          <input type="url" id="inputSupabaseUrl" class="input-field" placeholder="https://xxxxxxxxxxxxxxxxxxxx.supabase.co">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 18px;">
+          <label class="form-label" for="inputSupabaseKey">
+            Anon / Public Key <span class="required">*</span>
+          </label>
+          <input type="password" id="inputSupabaseKey" class="input-field" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+        </div>
+
+        <div id="dbTestStatus" style="font-size: 0.85rem; padding: 10px; border-radius: var(--radius-sm); display: none;"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="AdminApp.disconnectSupabase()">
+          Gunakan Mode Lokal
+        </button>
+        <button type="button" id="btnSaveDbConfig" class="btn btn-primary">
+          💾 Simpan & Hubungkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <img src="assets/logo-ywka.png" alt="Logo SMA YWKA" style="height: 28px;">
+        <span><strong>KhatibKu SMA YWKA</strong> • Portal Master Guru © 2026/2027</span>
+      </div>
+      <div>
+        <a href="index.html" class="btn btn-secondary btn-sm" style="font-weight: 700;">
+          ⬅️ Buka Halaman Form Siswa
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseConfig.js"></script>
+  <script src="js/sampleData.js"></script>
+  <script src="js/exportUtils.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

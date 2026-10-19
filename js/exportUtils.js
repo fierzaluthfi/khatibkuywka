@@ -138,20 +138,22 @@ const ExportUtils = {
           }
           .header-kop {
             text-align: center;
-            border-bottom: 3px double #111;
+            border-bottom: 3px double #001fb8;
             padding-bottom: 12px;
             margin-bottom: 20px;
           }
           .header-kop h2 {
             margin: 0 0 4px 0;
-            font-size: 18px;
-            text-transform: uppercase;
+            font-size: 20px;
+            color: #001fb8;
+            font-weight: 800;
             letter-spacing: 0.5px;
           }
           .header-kop h3 {
             margin: 0 0 4px 0;
-            font-size: 15px;
-            color: #047857;
+            font-size: 14px;
+            color: #ff5100;
+            font-weight: 700;
           }
           .header-kop p {
             margin: 0;
@@ -175,7 +177,8 @@ const ExportUtils = {
             vertical-align: middle;
           }
           th {
-            background-color: #f1f5f9;
+            background-color: #eef2ff;
+            color: #001fb8;
             font-weight: bold;
             text-align: center;
           }
@@ -186,8 +189,8 @@ const ExportUtils = {
             font-size: 10px;
             font-weight: bold;
           }
-          .badge.graded { background: #d1fae5; color: #065f46; }
-          .badge.pending { background: #fef3c7; color: #92400e; }
+          .badge.graded { background: #dcfce7; color: #166534; }
+          .badge.pending { background: #ffedd5; color: #9a3412; }
           .summary-box {
             margin-bottom: 25px;
             display: flex;
@@ -215,7 +218,7 @@ const ExportUtils = {
       </head>
       <body>
         <div class="no-print" style="margin-bottom: 15px; text-align: right;">
-          <button onclick="window.print()" style="padding: 8px 16px; background: #047857; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">🖨️ Cetak / Simpan PDF</button>
+          <button onclick="window.print()" style="padding: 8px 18px; background: #001fb8; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">🖨️ Cetak / Simpan PDF</button>
         </div>
 
         <div class="header-kop">

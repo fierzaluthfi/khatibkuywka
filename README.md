@@ -1,75 +1,57 @@
 # 🕌 KhatibKu - Portal Pelaporan & Monitoring Rangkuman Khutbah Jum'at SMA YWKA
 
-Website modern dan responsif untuk pengumpulan serta rekapitulasi tugas mingguan rangkuman khutbah Jum'at bagi siswa SMA YWKA, yang dikelompokkan berdasarkan masing-masing kelas.
+Website resmi SMA YWKA untuk pengumpulan tugas dan rekapitulasi nilai rangkuman khutbah Jum'at berbasis kelas, dengan sistem terpisah antara **Portal Siswa** dan **Portal Master Guru**.
+
+![Logo SMA YWKA](assets/logo-ywka.png)
 
 ---
 
-## 🌟 Fitur Utama
-
-### 1. ✍️ Formulir Pengumpulan Tugas Siswa (Mobile & Desktop)
-- **Identitas Lengkap:** Nama Siswa, NIS/NISN, Pilihan Kelas (X-A, X-B, XI-MIPA, XI-IPS, XII, dll.), dan Tanggal Shalat Jum'at (otomatis default ke Jum'at terdekat).
-- **Detail Shalat Jum'at:** Nama Masjid/Musholla, Alamat Masjid, dan Nama Khatib/Penceramah.
-- **Intisari Khutbah:** Judul/Tema, Dalil Al-Qur'an & Hadits yang dikutip, Pokok-pokok Rangkuman Khutbah (lengkap dengan penghitung karakter), serta Komitmen Pesan Moral / Aksi Nyata.
-- **Unggah Foto Dokumentasi:** Siswa dapat mengunggah foto suasana masjid, catatan tangan, atau selfie kehadiran dengan preview instan.
-- **Tanda Terima Digital (Digital Receipt):** Begitu terkirim, siswa mendapatkan bukti tanda terima resmi ber-ID unik (`JUM-YYYYMMDD-XXX`) yang dapat dicetak atau di-screenshot sebagai bukti setor ke wali kelas.
-
-### 2. 📋 Rekapitulasi Berdasarkan Masing-Masing Kelas (Dashboard Guru / Wali Kelas)
-- **Filter Kelas Cepat (Class Pills):** Tombol filter interaktif per kelas (`Semua Kelas`, `X-A`, `X-B`, `XI-MIPA 1`, `XI-IPS 1`, `XII-MIPA 1`, dll.) lengkap dengan badge jumlah siswa yang sudah mengumpulkan secara *real-time*.
-- **Penyaringan Tanggal & Status:** Filter berdasarkan tanggal pelaksanaan Jum'at tertentu dan status penilaian (*Menunggu*, *Sudah Dinilai*, *Perlu Revisi*).
-- **Pencarian Cepat:** Live search berdasarkan nama siswa, NISN, nama masjid, atau judul khutbah.
-- **Modal Periksa & Beri Nilai:** Guru dapat membaca isi rangkuman lengkap, melihat foto dokumentasi, memberi skor nilai (0-100), dan menuliskan catatan apresiasi/koreksi.
-- **📥 Ekspor ke Excel (.csv):** Mengunduh rekap nilai dan rangkuman siswa per kelas dalam format CSV yang rapi dan kompatibel langsung dengan Microsoft Excel.
-- **🖨️ Cetak Lembar Nilai Resmi:** Menghasilkan lembaran rekap nilai resmi ber-kop SMA YWKA yang siap dicetak atau disimpan ke PDF dengan kolom tanda tangan Wali Kelas dan Guru PAI.
-
-### 3. 📊 Statistik & Monitoring Keaktifan
-- Metrik ringkasan: Total Rangkuman Masuk, Rangkuman Dinilai, dan Rata-rata Nilai Siswa.
-- Progress bar pencapaian pengumpulan per kelas (dengan target 32 siswa per kelas).
-
-### 4. 📖 Panduan Tugas & Adab Shalat Jum'at
-- Memuat hadits shahih mengenai adab mendengarkan khutbah (keharusan diam dan tidak berbicara).
-- Tips menyimak dan waktu penulisan rangkuman (seusai shalat agar pahala Jum'at terjaga).
-- Rubrik dan kriteria penilaian tugas.
-
-### 5. 🎨 Desain & Estetika Premium
-- Tema islami elegan berpalet **Emerald Green & Warm Gold**.
-- Dukungan **Mode Terang (Light Mode)** dan **Mode Gelap (Dark Mode)** dengan transisi halus.
-- Responsif penuh untuk layar HP (smartphone) siswa maupun laptop/komputer bapak/ibu guru.
-- Menggunakan tipografi modern Google Fonts (*Plus Jakarta Sans* & *Outfit*).
+## 🎨 Identitas Warna Resmi (Berdasarkan Logo SMA YWKA)
+- 🔵 **Royal Blue (`#001FB8`)**: Melambangkan kebijaksanaan, ketegasan, dan naungan pendidikan.
+- 🟠 **Vibrant Orange (`#FF5100`)**: Melambangkan semangat pemuda, inovasi, dan kehangatan.
+- 🟢 **Leaf Green (`#1EA22E`)**: Melambangkan nilai-nilai akhlak Islami dan pertumbuhan karakter.
+- ⚫ **Charcoal / Slate (`#2D3139`)**: Tipografi modern yang nyaman dibaca di layar HP & laptop.
 
 ---
 
-## 📂 Struktur Berkas
+## 🏛️ Dua Portal Terpisah
 
-```
-d:/DATA SMA YWKA/Project/
-├── index.html              # Halaman utama aplikasi web
-├── Buka-Website.bat        # Pintasan sekali-klik untuk membuka di Windows
-├── README.md               # Dokumentasi penggunaan dan panduan sistem
-├── css/
-│   └── style.css           # Desain tema islami emerald-gold, dark mode, dan print styling
-└── js/
-    ├── app.js              # Logika state, event handlers, form, modal, dan interaksi
-    ├── sampleData.js       # Data awal demo (siswa kelas X, XI, XII & tanggal Jum'at)
-    └── exportUtils.js      # Generator ekspor Excel/CSV dan lembar cetak resmi
-```
+### 1. 🎒 Portal Siswa (`index.html`)
+- **Tujuan:** Khusus untuk siswa mengisi dan mengumpulkan tugas rangkuman khutbah Jum'at setiap pekan.
+- **Privasi:** Siswa hanya melihat formulir mereka sendiri, tidak dapat melihat nilai atau mengedit data siswa lain.
+- **Fitur Siswa:**
+  - Pilihan kelas (X-A, X-B, XI-MIPA, XI-IPS, XII, dll.).
+  - Pengisian nama masjid, alamat, dan penceramah/khatib.
+  - Penulisan judul, dalil Al-Qur'an/hadits, isi rangkuman, dan komitmen aksi nyata.
+  - Upload foto dokumentasi kehadiran masjid / catatan tangan dengan preview instan.
+  - **Tanda Terima Digital:** Siswa memperoleh kartu bukti penyerahan tugas resmi ber-ID unik (`JUM-YYYYMMDD-XXX`) yang dapat di-screenshot / disimpan.
+  - Panduan adab menyimak khutbah Jum'at.
+
+### 2. 👨‍🏫 Portal Master Guru & Wali Kelas (`admin.html`)
+- **Tujuan:** Khusus bagi Bapak/Ibu Guru dan Wali Kelas untuk memantau, memeriksa, dan menilai pengumpulan tugas.
+- **Keamanan:** Dilindungi **PIN Pengajar** (Default: **`ywka2026`**).
+- **Fitur Master Guru:**
+  - **Penyaringan Per Kelas (Class Pills):** Menampilkan badge counter jumlah pengumpulan siswa per kelas secara real-time.
+  - **Filter Tanggal & Status:** Memfilter pekan Jum'at dan status penilaian (*Menunggu* / *Sudah Dinilai*).
+  - **Pencarian Cepat:** Live search nama siswa, judul khutbah, atau masjid.
+  - **Lembar Penilaian Siswa:** Guru dapat membaca isi rangkuman, melihat foto bukti yang diunggah, memberi nilai **0–100**, dan menulis catatan apresiasi / koreksi.
+  - **📥 Unduh Excel (.csv):** Mengunduh rekap nilai per kelas yang siap diolah di Microsoft Excel.
+  - **🖨️ Cetak Lembar Nilai Resmi:** Format laporan cetak resmi ber-kop SMA YWKA dan kolom tanda tangan Wali Kelas & Guru PAI.
+  - **📊 Statistik Keaktifan:** Progress bar ketercapaian target pengumpulan per kelas (kuota 32 siswa).
+  - **⚡ Sinkronisasi Supabase Cloud:** Pengaturan database cloud terpusat.
 
 ---
 
-## 🚀 Cara Menggunakan
+## 🗄️ Sinkronisasi Database (Supabase Cloud)
+Kedua portal terhubung ke database yang sama:
+- Saat siswa mengirim tugas melalui `index.html`, datanya langsung tersimpan ke Supabase Cloud.
+- Guru yang membuka `admin.html` dari perangkat mana pun langsung melihat laporan masuk tersebut secara *real-time*.
 
-1. **Membuka Website:**
-   - Cukup klik ganda (double click) file **`Buka-Website.bat`**, atau
-   - Buka file **`index.html`** langsung menggunakan browser apa pun (Google Chrome, Microsoft Edge, Firefox, Safari).
-   - *Tidak membutuhkan instalasi server atau software tambahan.*
+Skema tabel SQL lengkap tersedia pada file: [**`supabase_schema.sql`**](file:///d:/DATA%20SMA%20YWKA/Project/supabase_schema.sql).
 
-2. **Sebagai Siswa:**
-   - Pilih tab **"✍️ Kirim Rangkuman"**.
-   - Isi nama, pilih kelas Anda, masukkan data masjid, dan tulis rangkuman khutbah.
-   - Klik **"🚀 Kirim Rangkuman Khutbah"**.
-   - Simpan atau screenshot kode tanda terima yang muncul.
+---
 
-3. **Sebagai Guru / Wali Kelas:**
-   - Pilih tab **"📋 Rekap Per Kelas"**.
-   - Klik tombol kelas yang ingin diperiksa (misalnya **Kelas X-A**).
-   - Klik tombol **"🔍 Periksa"** pada nama siswa untuk membaca rangkuman dan memberikan nilai (0-100).
-   - Klik **"📥 Unduh Excel"** untuk mengunduh rekap nilai ke Microsoft Excel, atau klik **"🖨️ Cetak Lembar Nilai"** untuk mencetak laporan resmi.
+## 🚀 Pintasan Sekali-Klik (Windows)
+- 📌 **`Buka-Portal-Siswa.bat`** ➔ Membuka form pengisian siswa.
+- 📌 **`Buka-Portal-Master.bat`** ➔ Membuka dashboard pemantauan & penilaian guru.
+- 📌 **`Push-Ke-GitHub.bat`** ➔ Mengunggah pembaruan codingan ke repositori GitHub.
