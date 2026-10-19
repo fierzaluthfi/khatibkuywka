@@ -31,7 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
 /**
  * 1. Data Initialization & Storage
  */
-function initData() {
+async function initData() {
+  updateDbBadgeUI();
+
   const storedSummaries = localStorage.getItem("khatibku_summaries");
   if (storedSummaries) {
     try {
@@ -56,11 +58,44 @@ function initData() {
     AppState.classes = DEFAULT_CLASSES || [];
     localStorage.setItem("khatibku_classes", JSON.stringify(AppState.classes));
   }
+
+  // Jika Supabase terhubung, ambil data terbaru dari cloud
+  if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+    try {
+      const cloudData = await SupabaseConfig.fetchSummaries();
+      if (cloudData && Array.isArray(cloudData)) {
+        AppState.summaries = cloudData;
+        saveSummaries();
+        renderSummariesTable();
+        renderClassFilterPills();
+        populateDateFilterDropdown();
+        updateTopMetrics();
+        updateClassStatistics();
+        showToast("Sinkronisasi database Supabase Cloud berhasil!", "success");
+      }
+    } catch (err) {
+      console.warn("Gagal memuat dari Supabase, menggunakan data lokal:", err);
+    }
+  }
 }
 
 function saveSummaries() {
   localStorage.setItem("khatibku_summaries", JSON.stringify(AppState.summaries));
 }
+
+function updateDbBadgeUI() {
+  const badge = document.getElementById("dbStatusBadge");
+  if (!badge) return;
+
+  if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+    badge.textContent = "🟢 Supabase Cloud";
+    badge.style.color = "#86efac";
+  } else {
+    badge.textContent = "🟡 Lokal (Offline)";
+    badge.style.color = "#fef08a";
+  }
+}
+
 
 /**
  * 2. Theme Toggle (Light / Dark Mode)
@@ -460,6 +495,15 @@ function handleSummarySubmit(e) {
   AppState.summaries.unshift(newSummary);
   saveSummaries();
 
+  // Sinkronisasi ke Cloud Database Supabase jika terhubung
+  if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+    SupabaseConfig.insertSummary(newSummary).then(ok => {
+      if (ok) {
+        showToast("Rangkuman tersimpan di Cloud Database Supabase!", "success");
+      }
+    });
+  }
+
   // Update UI komponen
   renderClassFilterPills();
   populateDateFilterDropdown();
@@ -595,6 +639,16 @@ function saveTeacherGrading() {
   AppState.summaries[itemIndex].status = statusVal;
 
   saveSummaries();
+
+  // Sinkronisasi ke Cloud Database Supabase jika terhubung
+  if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+    SupabaseConfig.updateSummary(AppState.currentViewingSummaryId, {
+      score: parsedScore,
+      feedback: feedbackVal,
+      status: statusVal
+    });
+  }
+
   closeReviewModal();
 
   renderSummariesTable();
@@ -609,8 +663,14 @@ function deleteCurrentSummary() {
   if (!AppState.currentViewingSummaryId) return;
 
   if (confirm("Apakah Anda yakin ingin menghapus laporan tugas rangkuman siswa ini? Tindakan ini tidak dapat dibatalkan.")) {
-    AppState.summaries = AppState.summaries.filter(s => s.id !== AppState.currentViewingSummaryId);
+    const deletingId = AppState.currentViewingSummaryId;
+    AppState.summaries = AppState.summaries.filter(s => s.id !== deletingId);
     saveSummaries();
+
+    if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+      SupabaseConfig.deleteSummary(deletingId);
+    }
+
     closeReviewModal();
 
     renderClassFilterPills();
@@ -798,6 +858,108 @@ function setupEventListeners() {
       }
     });
   }
+
+  // Database Supabase Modal Buttons
+  const btnOpenDb = document.getElementById("btnOpenDbModal");
+  if (btnOpenDb) {
+    btnOpenDb.addEventListener("click", openDbModal);
+  }
+
+  const btnSaveDb = document.getElementById("btnSaveDbConfig");
+  if (btnSaveDb) {
+    btnSaveDb.addEventListener("click", saveDbConfig);
+  }
+}
+
+/**
+ * 14. Supabase Database Configuration Modal
+ */
+function openDbModal() {
+  const modal = document.getElementById("dbModal");
+  if (!modal) return;
+
+  const creds = SupabaseConfig.getCredentials();
+  const inputUrl = document.getElementById("inputSupabaseUrl");
+  const inputKey = document.getElementById("inputSupabaseKey");
+  const statusDiv = document.getElementById("dbTestStatus");
+
+  if (inputUrl) inputUrl.value = creds.url || "";
+  if (inputKey) inputKey.value = creds.key || "";
+  if (statusDiv) {
+    statusDiv.style.display = "none";
+    statusDiv.textContent = "";
+  }
+
+  modal.classList.add("active");
+}
+
+function closeDbModal() {
+  const modal = document.getElementById("dbModal");
+  if (modal) modal.classList.remove("active");
+}
+
+async function saveDbConfig() {
+  const inputUrl = document.getElementById("inputSupabaseUrl");
+  const inputKey = document.getElementById("inputSupabaseKey");
+  const statusDiv = document.getElementById("dbTestStatus");
+
+  const url = inputUrl ? inputUrl.value.trim() : "";
+  const key = inputKey ? inputKey.value.trim() : "";
+
+  if (!url || !key) {
+    if (statusDiv) {
+      statusDiv.style.display = "block";
+      statusDiv.style.background = "#fee2e2";
+      statusDiv.style.color = "#991b1b";
+      statusDiv.textContent = "Harap isi Project URL dan Anon Key Supabase.";
+    }
+    return;
+  }
+
+  SupabaseConfig.saveCredentials(url, key);
+  updateDbBadgeUI();
+
+  if (statusDiv) {
+    statusDiv.style.display = "block";
+    statusDiv.style.background = "#fef3c7";
+    statusDiv.style.color = "#92400e";
+    statusDiv.textContent = "Sedang menguji koneksi ke Supabase Cloud...";
+  }
+
+  const cloudData = await SupabaseConfig.fetchSummaries();
+  if (cloudData !== null) {
+    if (statusDiv) {
+      statusDiv.style.background = "#d1fae5";
+      statusDiv.style.color = "#065f46";
+      statusDiv.textContent = `✅ Berhasil terhubung! Ditemukan ${cloudData.length} data di tabel Supabase.`;
+    }
+    if (cloudData.length > 0) {
+      AppState.summaries = cloudData;
+      saveSummaries();
+      renderClassFilterPills();
+      populateDateFilterDropdown();
+      renderSummariesTable();
+      updateTopMetrics();
+      updateClassStatistics();
+    }
+    setTimeout(() => {
+      closeDbModal();
+      showToast("Database Supabase Cloud berhasil dihubungkan!", "success");
+    }, 1200);
+  } else {
+    if (statusDiv) {
+      statusDiv.style.background = "#fee2e2";
+      statusDiv.style.color = "#991b1b";
+      statusDiv.innerHTML = "⚠️ Gagal terhubung ke Supabase. Pastikan Project URL & Anon Key benar, dan tabel <code>friday_summaries</code> sudah dibuat di SQL Editor.";
+    }
+  }
+}
+
+function disconnectSupabase() {
+  SupabaseConfig.saveCredentials("", "");
+  updateDbBadgeUI();
+  closeDbModal();
+  showToast("Mode beralih ke Database Lokal (Offline).", "info");
 }
 
 // Utility: Escape HTML to prevent XSS
