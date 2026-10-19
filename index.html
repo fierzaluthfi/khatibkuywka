@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Rangkuman Khutbah Jum'at - SMA YWKA</title>
+  <meta name="description" content="Aplikasi pelaporan dan pengumpulan tugas rangkuman khutbah Jum'at siswa SMA YWKA berbasis per kelas lengkap dengan rekapitulasi nilai guru.">
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <header class="top-announcement">
+    <div class="container top-announcement-content">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="announcement-badge">Pendidikan Agama Islam</span>
+        <span>Membentuk Generasi Berakhlak Mulia, Cerdas, dan Bertanggung Jawab • SMA YWKA</span>
+      </div>
+      <div class="top-actions">
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Beralih Mode Gelap/Terang">
+          🌙 Mode Gelap
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Sticky Navbar -->
+  <nav class="navbar">
+    <div class="container nav-container">
+      <div class="brand-wrapper">
+        <div class="brand-logo-circle" title="Logo SMA YWKA">
+          🕌
+        </div>
+        <div class="brand-info">
+          <h1>KhatibKu <span style="display:inline; font-weight: normal; font-size: 0.8em; color: var(--text-muted);">SMA YWKA</span></h1>
+          <span>Portal Pelaporan Rangkuman Khutbah Jum'at</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs" role="tablist">
+        <button class="nav-tab-btn active" data-tab="form" role="tab">
+          ✍️ Kirim Rangkuman
+        </button>
+        <button class="nav-tab-btn" data-tab="rekap" role="tab">
+          📋 Rekap Per Kelas
+        </button>
+        <button class="nav-tab-btn" data-tab="statistik" role="tab">
+          📊 Progres & Nilai
+        </button>
+        <button class="nav-tab-btn" data-tab="panduan" role="tab">
+          📖 Panduan Tugas
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Header Banner -->
+  <section class="hero-banner">
+    <div class="container hero-content">
+      <div class="hero-text">
+        <h2>Pelaporan Rangkuman Khutbah Jum'at</h2>
+        <p>Setiap siswa wajib menyimak khutbah dengan khusyuk, merangkum intisari nasihat khatib, dan mengumpulkannya sesuai kelas masing-masing setiap hari Jum'at.</p>
+      </div>
+
+      <!-- Quick Metrics Counters -->
+      <div class="hero-stats-quick">
+        <div class="stat-chip">
+          <div class="stat-chip-icon green">📥</div>
+          <div class="stat-chip-info">
+            <span>Total Masuk</span>
+            <strong id="statTotalSubmissions">0</strong>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon gold">⭐</div>
+          <div class="stat-chip-info">
+            <span>Sudah Dinilai</span>
+            <strong id="statTotalGraded">0</strong>
+          </div>
+        </div>
+        <div class="stat-chip">
+          <div class="stat-chip-icon green">📈</div>
+          <div class="stat-chip-info">
+            <span>Rata-Rata Nilai</span>
+            <strong id="statAvgScore">0.0</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Workspace -->
+  <main class="main-wrapper">
+    <div class="container">
+
+      <!-- ===================================================================
+           TAB 1: FORM PENGUMPULAN SISWA
+           =================================================================== -->
+      <div id="tab-form" class="tab-panel active" role="tabpanel">
+        
+        <form id="formSubmitSummary">
+          
+          <!-- Card 1: Identitas Siswa -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-icon">👤</div>
+                <div>
+                  <h3 class="card-title">1. Identitas Siswa & Kelas</h3>
+                  <p class="card-subtitle">Pastikan memilih kelas dengan teliti agar tugas terkelompok dengan benar ke guru kelas Anda.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="inputStudentName">
+                  Nama Lengkap Siswa <span class="required">*</span>
+                </label>
+                <input type="text" id="inputStudentName" class="input-field" placeholder="Contoh: Muhammad Farhan Pratama" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="inputNisn">
+                  NIS / NISN Siswa <span class="form-hint">(Opsional)</span>
+                </label>
+                <input type="text" id="inputNisn" class="input-field" placeholder="Contoh: 0078129410">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="inputClass">
+                  Pilih Kelas <span class="required">*</span>
+                </label>
+                <select id="inputClass" class="select-field" required>
+                  <option value="">-- Memuat daftar kelas... --</option>
+                </select>
+                <span class="form-hint">Tugas Anda akan otomatis masuk ke folder rekapitulasi kelas ini.</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="inputFridayDate">
+                  Tanggal Pelaksanaan Shalat Jum'at <span class="required">*</span>
+                </label>
+                <input type="date" id="inputFridayDate" class="input-field" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Lokasi Ibadah & Khatib -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-icon">🕌</div>
+                <div>
+                  <h3 class="card-title">2. Informasi Masjid & Khatib</h3>
+                  <p class="card-subtitle">Data masjid tempat Anda menunaikan ibadah shalat Jum'at berjamaah.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label" for="inputMosqueName">
+                  Nama Masjid / Musholla <span class="required">*</span>
+                </label>
+                <input type="text" id="inputMosqueName" class="input-field" placeholder="Contoh: Masjid Raya Baiturrahman" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="inputMosqueAddress">
+                  Lokasi / Alamat Masjid <span class="form-hint">(Jalan / Kelurahan)</span>
+                </label>
+                <input type="text" id="inputMosqueAddress" class="input-field" placeholder="Contoh: Jl. Merpati No. 14, Dekat SMA YWKA">
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label" for="inputKhatibName">
+                  Nama Khatib / Penceramah <span class="form-hint">(Sertakan gelar jika mengetahui)</span>
+                </label>
+                <input type="text" id="inputKhatibName" class="input-field" placeholder="Contoh: Ustadz Dr. H. Rahmat Hidayat, M.Ag">
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Rangkuman Khutbah -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-icon">📜</div>
+                <div>
+                  <h3 class="card-title">3. Intisari & Rangkuman Khutbah</h3>
+                  <p class="card-subtitle">Rangkum materi pokok yang disampaikan khatib beserta dalil dan pesan akhlaknya.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label class="form-label" for="inputKhutbahTitle">
+                  Tema / Judul Khutbah Jum'at <span class="required">*</span>
+                </label>
+                <input type="text" id="inputKhutbahTitle" class="input-field" placeholder="Contoh: Menjaga Lisan dan Kejujuran di Era Media Digital" required>
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label" for="inputQuranHadith">
+                  Dalil Al-Qur'an atau Hadits yang Dikutip <span class="form-hint">(Tuliskan surat/ayat atau nama perawi hadits)</span>
+                </label>
+                <input type="text" id="inputQuranHadith" class="input-field" placeholder="Contoh: QS. Al-Hujurat Ayat 6 atau HR. Bukhari tentang menjaga lisan">
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label" for="inputSummaryText">
+                  Uraian Isi Rangkuman Khutbah <span class="required">*</span>
+                </label>
+                <textarea id="inputSummaryText" class="textarea-field" placeholder="Tuliskan secara runtut pokok-pokok nasihat yang disampaikan oleh khatib di atas mimbar..." required></textarea>
+                <div id="charCounter" class="char-counter">0 karakter (minimal 50)</div>
+              </div>
+
+              <div class="form-group full-width">
+                <label class="form-label" for="inputMoralAction">
+                  Pesan Moral & Komitmen Aksi Nyata Anda <span class="form-hint">(Apa yang akan Anda terapkan dalam kehidupan sehari-hari?)</span>
+                </label>
+                <textarea id="inputMoralAction" class="textarea-field" style="min-height: 80px;" placeholder="Contoh: Saya akan selalu tabayyun sebelum membagikan informasi di media sosial dan tidak berkata kasar pada teman..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 4: Bukti Foto Kehadiran -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-icon">📸</div>
+                <div>
+                  <h3 class="card-title">4. Bukti Kehadiran / Dokumentasi</h3>
+                  <p class="card-subtitle">Unggah foto suasana masjid, catatan tulisan tangan, atau foto diri di area masjid.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="photo-upload-zone" onclick="document.getElementById('inputPhotoFile').click()">
+              <input type="file" id="inputPhotoFile" accept="image/*" style="display: none;">
+              
+              <div id="photoUploadPrompt">
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">Klik di sini untuk memilih foto dokumentasi</div>
+                <div class="upload-subtext">Mendukung format JPG, PNG, WEBP (Maksimal 5MB)</div>
+              </div>
+
+              <div id="photoPreviewContainer" class="photo-preview-wrapper" style="display: none;">
+                <img id="photoPreviewImg" class="photo-preview-img" src="" alt="Preview Dokumentasi Siswa">
+                <button type="button" id="btnRemovePhoto" class="btn-remove-photo" title="Hapus Foto">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tombol Aksi Submit -->
+          <div class="form-actions">
+            <button type="reset" class="btn btn-secondary">
+              🔄 Kosongkan Formulir
+            </button>
+            <button type="submit" class="btn btn-primary">
+              🚀 Kirim Rangkuman Khutbah
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- ===================================================================
+           TAB 2: REKAPITULASI BERDASARKAN KELAS (GURU / WALI KELAS)
+           =================================================================== -->
+      <div id="tab-rekap" class="tab-panel" role="tabpanel">
+        
+        <!-- Pilihan Filter Kelas (Pills) -->
+        <div class="card" style="padding: 20px 24px;">
+          <div class="class-filter-title">
+            <span>🏷️ Kelompokkan Berdasarkan Kelas:</span>
+            <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">Klik kelas untuk menyaring data</span>
+          </div>
+          <div id="classPillsContainer" class="class-pills-list">
+            <!-- Diisi otomatis oleh JavaScript -->
+          </div>
+        </div>
+
+        <!-- Filter & Search Controls Toolbar -->
+        <div class="filter-toolbar">
+          <div class="search-box-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="tableSearchInput" class="input-field" placeholder="Cari nama siswa, masjid, atau judul khutbah...">
+          </div>
+
+          <div class="filter-group-right">
+            <!-- Filter Tanggal Jum'at -->
+            <select id="filterFridayDate" class="select-field" style="width: auto; min-width: 190px;">
+              <option value="all">📅 Semua Tanggal Jum'at</option>
+            </select>
+
+            <!-- Filter Status Penilaian -->
+            <select id="filterStatus" class="select-field" style="width: auto; min-width: 160px;">
+              <option value="all">⚡ Semua Status</option>
+              <option value="pending">⏳ Menunggu Penilaian</option>
+              <option value="graded">✅ Sudah Dinilai</option>
+            </select>
+
+            <!-- Export Excel Button -->
+            <button id="btnExportCSV" class="btn btn-outline-gold" title="Ekspor data yang tampil ke file CSV / Excel">
+              📥 Unduh Excel
+            </button>
+
+            <!-- Cetak Laporan Button -->
+            <button id="btnPrintReport" class="btn btn-primary" title="Cetak lembar penilaian resmi per kelas">
+              🖨️ Cetak Lembar Nilai
+            </button>
+          </div>
+        </div>
+
+        <!-- Indikator Jumlah Data yang Ditampilkan -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 0.88rem; color: var(--text-muted);">
+          <div id="filteredResultCount">Menampilkan 0 data rangkuman</div>
+          <div>Klik tombol <strong>Periksa</strong> untuk membaca rangkuman lengkap & memberikan nilai.</div>
+        </div>
+
+        <!-- Tabel Rekapitulasi Rangkuman Siswa -->
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align: center;">No</th>
+                <th>Nama Siswa & NISN</th>
+                <th style="text-align: center;">Kelas</th>
+                <th>Tanggal Jum'at</th>
+                <th>Masjid & Khatib</th>
+                <th>Tema Khutbah</th>
+                <th style="text-align: center;">Foto</th>
+                <th style="text-align: center;">Status</th>
+                <th style="text-align: center;">Nilai</th>
+                <th style="text-align: center; width: 100px;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="summariesTableBody">
+              <!-- Baris tabel di-generate secara dinamis -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State jika tidak ada data -->
+        <div id="emptyStateTable" class="empty-state" style="display: none;">
+          <div class="empty-state-icon">📭</div>
+          <h3>Tidak Ada Data Rangkuman</h3>
+          <p>Belum ada tugas siswa yang dikumpulkan untuk saringan kelas atau tanggal yang Anda pilih.</p>
+        </div>
+
+      </div>
+
+      <!-- ===================================================================
+           TAB 3: STATISTIK & MONITORING KEAKTIFAN KELAS
+           =================================================================== -->
+      <div id="tab-statistik" class="tab-panel" role="tabpanel">
+        
+        <div class="card-header" style="margin-bottom: 24px;">
+          <div>
+            <h3 class="card-title">📊 Monitoring Keaktifan Pengumpulan Per Kelas</h3>
+            <p class="card-subtitle">Memantau tingkat partisipasi siswa dari setiap kelas dalam melaksanakan tugas shalat Jum'at.</p>
+          </div>
+        </div>
+
+        <!-- Grid Progress Per Kelas -->
+        <div id="classProgressGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px;">
+          <!-- Diisi otomatis oleh JavaScript -->
+        </div>
+
+      </div>
+
+      <!-- ===================================================================
+           TAB 4: PANDUAN TUGAS KHUTBAH JUM'AT
+           =================================================================== -->
+      <div id="tab-panduan" class="tab-panel" role="tabpanel">
+        
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">📖</div>
+              <div>
+                <h3 class="card-title">Panduan Adab & Penulisan Rangkuman Khutbah Jum'at</h3>
+                <p class="card-subtitle">Pedoman resmi bagi seluruh siswa SMA YWKA</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+            <div class="detail-item-box" style="border-left-color: #059669;">
+              <h4 style="color: var(--primary); margin-bottom: 8px;">1. Adab Menyimak Khutbah</h4>
+              <p style="font-size: 0.9rem; color: var(--text-main); margin-bottom: 8px;">
+                Saat khatib telah naik mimbar dan berkhutbah, seluruh jamaah <strong>wajib diam dan mendengarkan</strong>. Tidak diperkenankan berbicara bahkan sekadar menegur kawan.
+              </p>
+              <blockquote style="font-style: italic; background: rgba(5,150,105,0.06); padding: 8px 12px; border-radius: 6px; font-size: 0.85rem;">
+                "Jika engkau berkata kepada sahabatmu pada hari Jum'at 'Diamlah!' saat imam sedang berkhutbah, maka sungguh engkau telah berbuat sia-sia." (HR. Bukhari no. 934 & Muslim no. 851)
+              </blockquote>
+            </div>
+
+            <div class="detail-item-box" style="border-left-color: #d97706;">
+              <h4 style="color: var(--accent-gold); margin-bottom: 8px;">2. Kapan Waktu Mencatat?</h4>
+              <p style="font-size: 0.9rem; color: var(--text-main);">
+                Siswa dianjurkan untuk <strong>fokus menyimak dan mengingat poin-poin inti</strong> selama khutbah berlangsung. Catatan dan penulisan rangkuman dilakukan <strong>seusai shalat Jum'at selesai</strong> atau setelah tiba di rumah/sekolah agar tidak merusak kesempurnaan pahala Jum'at.
+              </p>
+            </div>
+
+            <div class="detail-item-box" style="border-left-color: #3b82f6;">
+              <h4 style="color: #2563eb; margin-bottom: 8px;">3. Unsur Rangkuman yang Baik</h4>
+              <ul style="padding-left: 20px; font-size: 0.9rem; color: var(--text-main); line-height: 1.7;">
+                <li><strong>Identitas Masjid & Khatib:</strong> Tuliskan nama masjid dan khatib dengan benar.</li>
+                <li><strong>Tema / Topik Utama:</strong> Pokok pesan moral yang dibawakan.</li>
+                <li><strong>Dalil Pendukung:</strong> Sebutkan ayat Al-Qur'an atau hadits yang dijadikan rujukan oleh khatib.</li>
+                <li><strong>Aksi Nyata:</strong> Refleksi pribadi tentang bagaimana Anda menerapkan nasehat tersebut di lingkungan sekolah dan keluarga.</li>
+              </ul>
+            </div>
+
+            <div class="detail-item-box" style="border-left-color: #8b5cf6;">
+              <h4 style="color: #7c3aed; margin-bottom: 8px;">4. Kriteria Penilaian Guru</h4>
+              <ul style="padding-left: 20px; font-size: 0.9rem; color: var(--text-main); line-height: 1.7;">
+                <li><strong>Kelengkapan Isi (40%):</strong> Menjelaskan pokok khutbah secara sistematis.</li>
+                <li><strong>Ketepatan Dalil (25%):</strong> Menyertakan ayat/hadits yang relevan.</li>
+                <li><strong>Aksi Nyata & Relevansi (25%):</strong> Adanya komitmen penerapan akhlakul karimah.</li>
+                <li><strong>Ketepatan Waktu & Bukti (10%):</strong> Dikumpulkan pada hari Jum'at sebelum pukul 21:00 WIB.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===================================================================
+       MODAL 1: PERIKSA & BERI NILAI TUGAS (UNTUK GURU)
+       =================================================================== -->
+  <div id="reviewModal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 id="modalStudentName">Detail Rangkuman Siswa</h3>
+          <div id="modalStudentMeta" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;"></div>
+        </div>
+        <button class="modal-close-btn" onclick="closeReviewModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- Info Pelaksanaan -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+          <div class="detail-item-box" style="margin-bottom: 0;">
+            <div class="detail-item-title">🕌 Lokasi Masjid</div>
+            <div id="modalMosqueInfo" class="detail-item-content">-</div>
+          </div>
+          <div class="detail-item-box" style="margin-bottom: 0;">
+            <div class="detail-item-title">📅 Tanggal & Khatib</div>
+            <div id="modalDateInfo" style="font-weight: 600; color: var(--primary);"></div>
+            <div id="modalKhatibInfo" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+          </div>
+        </div>
+
+        <!-- Tema Khutbah -->
+        <div class="detail-item-box">
+          <div class="detail-item-title">📌 Tema / Judul Khutbah</div>
+          <div id="modalKhutbahTitle" class="detail-item-content" style="font-weight: 700; font-size: 1.05rem;">-</div>
+        </div>
+
+        <!-- Dalil -->
+        <div class="detail-item-box" style="border-left-color: var(--accent-gold);">
+          <div class="detail-item-title">📖 Dalil Al-Qur'an / Hadits</div>
+          <div id="modalQuranHadith" class="detail-item-content" style="font-style: italic;">-</div>
+        </div>
+
+        <!-- Uraian Rangkuman -->
+        <div class="detail-item-box">
+          <div class="detail-item-title">📝 Isi Rangkuman Khutbah</div>
+          <div id="modalSummaryText" class="detail-item-content">-</div>
+        </div>
+
+        <!-- Aksi Nyata -->
+        <div class="detail-item-box" style="border-left-color: #3b82f6;">
+          <div class="detail-item-title">🌱 Pesan Moral & Aksi Nyata Siswa</div>
+          <div id="modalMoralAction" class="detail-item-content">-</div>
+        </div>
+
+        <!-- Foto Bukti -->
+        <div id="modalPhotoWrapper" class="detail-item-box" style="display: none;">
+          <div class="detail-item-title">📷 Foto Bukti Kehadiran / Dokumentasi</div>
+          <div style="margin-top: 8px; text-align: center;">
+            <img id="modalPhotoImg" src="" alt="Foto Bukti Siswa" style="max-width: 100%; max-height: 320px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm);">
+          </div>
+        </div>
+
+        <!-- Box Penilaian Guru -->
+        <div class="grading-card">
+          <h4 style="margin-bottom: 12px; color: var(--primary-dark); font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+            <span>✍️</span> Lembar Penilaian & Umpan Balik Guru
+          </h4>
+          
+          <div style="display: grid; grid-template-columns: 140px 1fr; gap: 14px; margin-bottom: 12px;">
+            <div class="form-group">
+              <label class="form-label" for="modalInputScore">Nilai (0-100)</label>
+              <input type="number" id="modalInputScore" class="input-field" min="0" max="100" placeholder="90" style="font-size: 1.1rem; font-weight: 700; text-align: center;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="modalSelectStatus">Status Penilaian</label>
+              <select id="modalSelectStatus" class="select-field">
+                <option value="graded">✅ Sudah Dinilai (Selesai)</option>
+                <option value="pending">⏳ Masih Menunggu</option>
+                <option value="revision">⚠️ Perlu Revisi / Kurang Lengkap</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="modalInputFeedback">Catatan Guru / Masukan untuk Siswa</label>
+            <textarea id="modalInputFeedback" class="textarea-field" style="min-height: 80px;" placeholder="Tuliskan catatan apresiasi atau evaluasi untuk siswa..."></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btnDeleteSummary" class="btn btn-secondary" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+          🗑️ Hapus Laporan
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="closeReviewModal()">
+          Batal
+        </button>
+        <button type="button" id="btnSaveGrading" class="btn btn-primary">
+          💾 Simpan Nilai & Catatan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL 2: DIGITAL RECEIPT (BUKTI SETOR TUGAS SISWA)
+       =================================================================== -->
+  <div id="receiptModal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3>🎉 Rangkuman Berhasil Terkirim!</h3>
+        <button class="modal-close-btn" onclick="closeReceiptModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="receipt-card">
+          <div class="receipt-icon">🕌</div>
+          <h4 style="color: var(--primary-dark); font-size: 1.2rem; margin-bottom: 4px;">SMA YWKA</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Tanda Terima Penyerahan Tugas Khutbah Jum'at</p>
+          <div id="receiptId" class="receipt-id">JUM-XXXXXX</div>
+          <span style="font-size: 0.75rem; background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 99px; font-weight: bold;">
+            STATUS: DITERIMA SISTEM
+          </span>
+        </div>
+
+        <div style="font-size: 0.9rem; line-height: 1.8;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 6px 0;">
+            <span style="color: var(--text-muted);">Nama Siswa:</span>
+            <strong id="receiptStudentName">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 6px 0;">
+            <span style="color: var(--text-muted);">Kelas:</span>
+            <strong id="receiptClass">-</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 6px 0;">
+            <span style="color: var(--text-muted);">Waktu Kirim:</span>
+            <span id="receiptDate" style="font-weight: 500;">-</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border-color); padding: 6px 0;">
+            <span style="color: var(--text-muted);">Masjid:</span>
+            <span id="receiptMosque" style="font-weight: 600;">-</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+            <span style="color: var(--text-muted);">Tema Khutbah:</span>
+            <strong id="receiptTitle" style="text-align: right; max-width: 260px;">-</strong>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-card-subtle); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.8rem; color: var(--text-muted); margin-top: 14px; text-align: center;">
+          💡 Anda dapat mengambil tangkapan layar (screenshot) tanda terima ini sebagai arsip pribadi atau bukti serah tugas kepada wali kelas.
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="window.print()">
+          🖨️ Cetak Bukti
+        </button>
+        <button type="button" class="btn btn-primary" onclick="closeReceiptModal(); switchTab('rekap');">
+          Lihat di Rekap Kelas ➔
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <strong>Portal Rangkuman Khutbah Jum'at</strong> • SMA YWKA © 2026/2027
+      </div>
+      <div>
+        <button id="btnResetDemo" class="btn btn-secondary btn-sm" title="Pulihkan data sample jika diperlukan">
+          🔄 Reset Data Demo
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/sampleData.js"></script>
+  <script src="js/exportUtils.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
