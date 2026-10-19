@@ -110,7 +110,6 @@ const SiswaApp = {
     e.preventDefault();
 
     const studentName = document.getElementById("inputStudentName").value.trim();
-    const nisn = document.getElementById("inputNisn").value.trim();
     const className = document.getElementById("inputClass").value;
     const fridayDate = document.getElementById("inputFridayDate").value;
     const mosqueName = document.getElementById("inputMosqueName").value.trim();
@@ -118,7 +117,6 @@ const SiswaApp = {
     const khatibName = document.getElementById("inputKhatibName").value.trim();
     const khutbahTitle = document.getElementById("inputKhutbahTitle").value.trim();
     const summaryText = document.getElementById("inputSummaryText").value.trim();
-    const quranHadith = document.getElementById("inputQuranHadith").value.trim();
     const moralAction = document.getElementById("inputMoralAction").value.trim();
 
     if (!studentName || !className || !fridayDate || !mosqueName || !khutbahTitle || !summaryText) {
@@ -138,7 +136,7 @@ const SiswaApp = {
     const newSummary = {
       id: summaryId,
       studentName,
-      nisn,
+      nisn: "",
       className,
       fridayDate,
       mosqueName,
@@ -146,7 +144,7 @@ const SiswaApp = {
       khatibName,
       khutbahTitle,
       summaryText,
-      quranHadith,
+      quranHadith: "",
       moralAction,
       photoUrl: this.activePhotoBase64 || "",
       submittedAt: new Date().toISOString(),

@@ -36,9 +36,13 @@
   <nav class="navbar">
     <div class="container nav-container">
       <div class="brand-wrapper">
-        <img src="assets/logo-ywka.png" alt="Logo SMA YWKA" class="brand-logo-img">
+        <div class="brand-logos-pair">
+          <img src="assets/logo-ywka.png" alt="Logo SMAS YWKA" class="brand-logo-img">
+          <span class="logo-divider"></span>
+          <img src="assets/logo-masjid.svg" alt="Logo Masjid" class="brand-logo-img mosque-logo">
+        </div>
         <div class="brand-info">
-          <h1>KhatibKu <span style="display:inline; color: var(--ywka-blue);">SMA YWKA</span></h1>
+          <h1>KhatibKu <span style="display:inline; color: var(--ywka-blue);">SMAS YWKA</span></h1>
           <span>Portal Pengisian Rangkuman Siswa</span>
         </div>
       </div>
@@ -108,18 +112,11 @@
             </div>
 
             <div class="form-grid">
-              <div class="form-group">
+              <div class="form-group full-width">
                 <label class="form-label" for="inputStudentName">
                   Nama Lengkap Siswa <span class="required">*</span>
                 </label>
                 <input type="text" id="inputStudentName" class="input-field" placeholder="Masukkan nama lengkap Anda..." required>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="inputNisn">
-                  NIS / NISN <span class="form-hint">(Opsional)</span>
-                </label>
-                <input type="text" id="inputNisn" class="input-field" placeholder="Contoh: 0078129410">
               </div>
 
               <div class="form-group">
@@ -194,13 +191,6 @@
                   Tema / Judul Khutbah Jum'at <span class="required">*</span>
                 </label>
                 <input type="text" id="inputKhutbahTitle" class="input-field" placeholder="Contoh: Menjaga Lisan dan Kejujuran di Era Media Digital" required>
-              </div>
-
-              <div class="form-group full-width">
-                <label class="form-label" for="inputQuranHadith">
-                  Kutipan Ayat Al-Qur'an atau Hadits <span class="form-hint">(Jika ada)</span>
-                </label>
-                <input type="text" id="inputQuranHadith" class="input-field" placeholder="Contoh: QS. Al-Hujurat Ayat 6 atau HR. Bukhari no. 6412">
               </div>
 
               <div class="form-group full-width">
@@ -322,8 +312,12 @@
 
       <div class="modal-body">
         <div class="receipt-card">
-          <img src="assets/logo-ywka.png" alt="SMA YWKA" style="height: 48px; margin-bottom: 8px;">
-          <h4 style="color: var(--ywka-blue); font-size: 1.15rem; margin-bottom: 2px;">SMA YWKA</h4>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <img src="assets/logo-ywka.png" alt="SMAS YWKA" style="height: 48px;">
+            <span class="logo-divider" style="height: 30px;"></span>
+            <img src="assets/logo-masjid.svg" alt="Masjid" style="height: 44px;">
+          </div>
+          <h4 style="color: var(--ywka-blue); font-size: 1.15rem; margin-bottom: 2px;">SMAS YWKA</h4>
           <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">Tanda Terima Penyerahan Tugas Khutbah Jum'at</p>
           <div id="receiptId" class="receipt-id">JUM-XXXXXX</div>
           <span style="font-size: 0.75rem; background: var(--ywka-green-light); color: var(--ywka-green); padding: 3px 12px; border-radius: 99px; font-weight: 800; border: 1px solid var(--ywka-green-border);">
@@ -375,15 +369,11 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <img src="assets/logo-ywka.png" alt="Logo SMA YWKA" style="height: 28px;">
-        <span><strong>KhatibKu SMA YWKA</strong> • Portal Siswa © 2026/2027</span>
-      </div>
-      <div>
-        <a href="admin.html" class="btn btn-secondary btn-sm" style="font-weight: 700; color: var(--ywka-blue);">
-          🔐 Akses Portal Master Guru ➔
-        </a>
+    <div class="container" style="display: flex; justify-content: center; align-items: center; text-align: center; padding: 10px 0;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <img src="assets/logo-ywka.png" alt="Logo SMAS YWKA" style="height: 26px;">
+        <img src="assets/logo-masjid.svg" alt="Logo Masjid" style="height: 24px;">
+        <span><strong>KhatibKu SMAS YWKA</strong> • Portal Siswa © 2026/2027</span>
       </div>
     </div>
   </footer>

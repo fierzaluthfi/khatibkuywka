@@ -215,11 +215,28 @@ button, input, select, textarea {
   gap: 14px;
 }
 
+.brand-logos-pair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-divider {
+  width: 1.5px;
+  height: 36px;
+  background-color: var(--border-color);
+  opacity: 0.8;
+}
+
 .brand-logo-img {
   height: 48px;
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+}
+
+.brand-logo-img.mosque-logo {
+  height: 44px;
 }
 
 .brand-info h1 {
