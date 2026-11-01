@@ -152,6 +152,18 @@
           </div>
         </div>
 
+        <!-- Live Auto-Sync Status & Refresh -->
+        <div class="sync-status-bar">
+          <div class="sync-status-indicator">
+            <span class="live-dot"></span>
+            <span id="syncStatusText">Pemantauan Otomatis Aktif (Supabase Cloud)</span>
+            <span class="sync-time" id="lastSyncTime">Terakhir diperbarui: Memuat...</span>
+          </div>
+          <button id="btnRefreshData" class="btn btn-secondary btn-sm" title="Segarkan Data Sekarang">
+            <span class="btn-icon-refresh">🔄</span> Segarkan Data
+          </button>
+        </div>
+
         <!-- Indikator Jumlah Data -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 0.88rem; color: var(--text-muted);">
           <div id="filteredResultCount">Menampilkan 0 data rangkuman</div>

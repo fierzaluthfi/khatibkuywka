@@ -163,13 +163,16 @@ const SiswaApp = {
     list.unshift(newSummary);
     localStorage.setItem("khatibku_summaries", JSON.stringify(list));
 
-    // 2. Simpan ke Cloud Supabase (jika terhubung)
+    // 2. Simpan ke Cloud Supabase (Otomatis ke Database Sekolah)
     if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
-      SupabaseConfig.insertSummary(newSummary).then(ok => {
+      try {
+        const ok = await SupabaseConfig.insertSummary(newSummary);
         if (ok) {
-          this.showToast("Tersimpan di Cloud Database Sekolah!", "success");
+          console.log("Rangkuman berhasil tersimpan ke Cloud Supabase");
         }
-      });
+      } catch (err) {
+        console.error("Gagal mengirim ke Supabase:", err);
+      }
     }
 
     // Tampilkan Tanda Terima Resmi

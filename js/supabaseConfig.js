@@ -4,9 +4,12 @@
  */
 
 const SupabaseConfig = {
-  // Anda dapat memasukkan URL & Anon Key default di sini atau menyimpannya lewat tombol Pengaturan di website
-  defaultUrl: "",
-  defaultKey: "",
+  // Konfigurasi Database Supabase Cloud SMA YWKA (Tersambung Otomatis di Semua Perangkat & Laptop)
+  defaultUrl: "https://spdxohzilgtysmbdsrgg.supabase.co",
+  defaultKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNwZHhvaHppbGd0eXNtYmRzcmdnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzOTM3NzQsImV4cCI6MjEwNzk2OTc3NH0.4BniEac-Z_NVBXlEYEwvvDVH45mQ79rzanW17POSNFA",
+
+  _client: null,
+  _activeChannel: null,
 
   getClient() {
     const savedUrl = localStorage.getItem("khatibku_supabase_url") || this.defaultUrl;
@@ -17,7 +20,12 @@ const SupabaseConfig = {
     }
 
     try {
-      return supabase.createClient(savedUrl, savedKey);
+      if (!this._client || this._lastUrl !== savedUrl || this._lastKey !== savedKey) {
+        this._client = supabase.createClient(savedUrl, savedKey);
+        this._lastUrl = savedUrl;
+        this._lastKey = savedKey;
+      }
+      return this._client;
     } catch (e) {
       console.error("Gagal menginisialisasi klien Supabase:", e);
       return null;
@@ -26,6 +34,36 @@ const SupabaseConfig = {
 
   isConnected() {
     return this.getClient() !== null;
+  },
+
+  // Langganan Realtime Supabase (Otomatis mendeteksi saat ada siswa baru menyetor rangkuman)
+  subscribeToSummaries(onDataChange) {
+    const client = this.getClient();
+    if (!client) return null;
+
+    try {
+      if (this._activeChannel) {
+        client.removeChannel(this._activeChannel);
+      }
+
+      this._activeChannel = client
+        .channel('realtime_friday_summaries')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'friday_summaries' }, (payload) => {
+          if (typeof onDataChange === 'function') {
+            onDataChange(payload);
+          }
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Supabase Realtime tersambung ke tabel friday_summaries');
+          }
+        });
+
+      return this._activeChannel;
+    } catch (err) {
+      console.warn("Realtime subscription warning:", err);
+      return null;
+    }
   },
 
   saveCredentials(url, key) {

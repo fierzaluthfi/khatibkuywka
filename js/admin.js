@@ -22,6 +22,7 @@ const AdminApp = {
     this.updateTopMetrics();
     this.updateClassStatistics();
     this.setupEventListeners();
+    this.startAutoSync();
   },
 
   initTheme() {
@@ -109,15 +110,96 @@ const AdminApp = {
 
   updateDbBadgeUI() {
     const badge = document.getElementById("dbStatusBadge");
-    if (!badge) return;
-
-    if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
-      badge.textContent = "🟢 Supabase Cloud";
-      badge.style.color = "#86efac";
-    } else {
-      badge.textContent = "🟡 Lokal (Offline)";
-      badge.style.color = "#fef08a";
+    if (badge) {
+      if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+        badge.textContent = "🟢 Supabase Cloud";
+        badge.style.color = "#86efac";
+      } else {
+        badge.textContent = "🟡 Lokal (Offline)";
+        badge.style.color = "#fef08a";
+      }
     }
+
+    const syncStatusText = document.getElementById("syncStatusText");
+    if (syncStatusText) {
+      if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+        syncStatusText.textContent = "Pemantauan Otomatis Aktif (Supabase Cloud)";
+      } else {
+        syncStatusText.textContent = "Mode Database Lokal (Offline)";
+      }
+    }
+  },
+
+  updateLastSyncTime() {
+    const el = document.getElementById("lastSyncTime");
+    if (el) {
+      const now = new Date();
+      el.textContent = `Terakhir diperbarui: ${now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`;
+    }
+  },
+
+  async refreshData(isSilent = false) {
+    if (typeof SupabaseConfig === "undefined" || !SupabaseConfig.isConnected()) {
+      this.updateDbBadgeUI();
+      return;
+    }
+
+    const refreshBtn = document.getElementById("btnRefreshData");
+    if (!isSilent && refreshBtn) {
+      const icon = refreshBtn.querySelector(".btn-icon-refresh") || refreshBtn;
+      icon.classList.add("rotating");
+    }
+
+    try {
+      const cloudData = await SupabaseConfig.fetchSummaries();
+      if (cloudData && Array.isArray(cloudData)) {
+        const previousIds = new Set(this.summaries.map(s => s.id));
+        const newItems = cloudData.filter(item => !previousIds.has(item.id));
+
+        this.summaries = cloudData;
+        localStorage.setItem("khatibku_summaries", JSON.stringify(this.summaries));
+
+        this.renderClassFilterPills();
+        this.populateDateFilterDropdown();
+        this.renderSummariesTable();
+        this.updateTopMetrics();
+        this.updateClassStatistics();
+        this.updateLastSyncTime();
+
+        if (isSilent && newItems.length > 0 && previousIds.size > 0) {
+          const first = newItems[0];
+          this.showToast(`🔔 Rangkuman baru masuk: ${first.studentName} (Kelas ${first.className})`, "success");
+        } else if (!isSilent) {
+          this.showToast("Data berhasil diperbarui dari Supabase Cloud!", "success");
+        }
+      }
+    } catch (err) {
+      console.warn("Auto sync failed:", err);
+    } finally {
+      if (!isSilent && refreshBtn) {
+        const icon = refreshBtn.querySelector(".btn-icon-refresh") || refreshBtn;
+        icon.classList.remove("rotating");
+      }
+      this.updateDbBadgeUI();
+    }
+  },
+
+  startAutoSync() {
+    this.updateLastSyncTime();
+
+    // 1. Supabase Realtime (Deteksi perubahan data langsung dalam hitungan detik)
+    if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+      SupabaseConfig.subscribeToSummaries((payload) => {
+        console.log("Supabase Realtime event diterima:", payload);
+        this.refreshData(true);
+      });
+    }
+
+    // 2. Interval background sync (Auto-refresh berkala setiap 15 detik sebagai fallback)
+    if (this._syncInterval) clearInterval(this._syncInterval);
+    this._syncInterval = setInterval(() => {
+      this.refreshData(true);
+    }, 15000);
   },
 
   renderClassFilterPills() {
@@ -588,6 +670,9 @@ const AdminApp = {
 
     const btnDel = document.getElementById("btnDeleteSummary");
     if (btnDel) btnDel.addEventListener("click", () => this.deleteCurrentSummary());
+
+    const btnRefresh = document.getElementById("btnRefreshData");
+    if (btnRefresh) btnRefresh.addEventListener("click", () => this.refreshData(false));
 
     const btnOpenDb = document.getElementById("btnOpenDbModal");
     if (btnOpenDb) btnOpenDb.addEventListener("click", () => this.openDbModal());

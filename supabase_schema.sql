@@ -58,7 +58,11 @@ ON friday_summaries
 FOR DELETE
 USING (true);
 
--- 8. Masukkan Data Sample Awal (Opsional)
+-- 8. Aktifkan Realtime Supabase untuk tabel friday_summaries
+-- Agar guru dapat memantau tugas siswa yang masuk secara langsung tanpa reload
+ALTER PUBLICATION supabase_realtime ADD TABLE friday_summaries;
+
+-- 9. Masukkan Data Sample Awal (Opsional)
 INSERT INTO friday_summaries (
   id, student_name, nisn, class_name, friday_date, 
   mosque_name, mosque_address, khatib_name, 
