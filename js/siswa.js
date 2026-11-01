@@ -32,14 +32,15 @@ const SiswaApp = {
 
   initClasses() {
     const stored = localStorage.getItem("khatibku_classes");
-    if (stored) {
-      try { this.classes = JSON.parse(stored); } catch (e) { this.classes = DEFAULT_CLASSES; }
-    } else {
+    if (!stored || stored.includes("X-A") || !stored.includes("X.1")) {
       this.classes = typeof DEFAULT_CLASSES !== "undefined" ? DEFAULT_CLASSES : [
-        "X-A", "X-B", "X-C",
-        "XI-MIPA 1", "XI-MIPA 2", "XI-IPS 1", "XI-IPS 2",
-        "XII-MIPA 1", "XII-MIPA 2", "XII-IPS 1", "XII-IPS 2"
+        "X.1", "X.2", "X.3",
+        "XI.1", "XI.2", "XI.3",
+        "XII.1", "XII.2", "XII.3"
       ];
+      localStorage.setItem("khatibku_classes", JSON.stringify(this.classes));
+    } else {
+      try { this.classes = JSON.parse(stored); } catch (e) { this.classes = DEFAULT_CLASSES; }
     }
 
     const select = document.getElementById("inputClass");

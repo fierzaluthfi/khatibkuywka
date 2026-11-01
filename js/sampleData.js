@@ -4,9 +4,9 @@
  */
 
 const DEFAULT_CLASSES = [
-  "X-A", "X-B", "X-C",
-  "XI-MIPA 1", "XI-MIPA 2", "XI-IPS 1", "XI-IPS 2",
-  "XII-MIPA 1", "XII-MIPA 2", "XII-IPS 1", "XII-IPS 2"
+  "X.1", "X.2", "X.3",
+  "XI.1", "XI.2", "XI.3",
+  "XII.1", "XII.2", "XII.3"
 ];
 
 // Helper untuk mendapatkan tanggal Jum'at terdekat atau Jum'at pekan lalu
@@ -24,7 +24,7 @@ const sampleSummaries = [
     id: "JUM-20261016-001",
     studentName: "Muhammad Farhan Pratama",
     nisn: "0078129410",
-    className: "X-A",
+    className: "X.1",
     fridayDate: getRecentFriday(0),
     mosqueName: "Masjid Al-Ikhlas",
     mosqueAddress: "Jl. Merpati No. 14, Dekat SMA YWKA",
@@ -43,7 +43,7 @@ const sampleSummaries = [
     id: "JUM-20261016-002",
     studentName: "Ahmad Rizky Fauzan",
     nisn: "0075218903",
-    className: "X-A",
+    className: "X.1",
     fridayDate: getRecentFriday(0),
     mosqueName: "Masjid Raya Baiturrahman",
     mosqueAddress: "Jl. Veteran No. 45",
@@ -62,7 +62,7 @@ const sampleSummaries = [
     id: "JUM-20261016-003",
     studentName: "Fajar Nugraha",
     nisn: "0081290312",
-    className: "X-A",
+    className: "X.1",
     fridayDate: getRecentFriday(0),
     mosqueName: "Masjid Al-Muhajirin",
     mosqueAddress: "Komplek Perumahan Griya Asri",
@@ -81,7 +81,7 @@ const sampleSummaries = [
     id: "JUM-20261016-004",
     studentName: "Bagas Satria Wibowo",
     nisn: "0074412098",
-    className: "X-B",
+    className: "X.2",
     fridayDate: getRecentFriday(0),
     mosqueName: "Masjid Jami' An-Nur",
     mosqueAddress: "Jl. Stasiun Lama No. 8",
@@ -100,7 +100,7 @@ const sampleSummaries = [
     id: "JUM-20261016-005",
     studentName: "Daffa Kurniawan",
     nisn: "0079981240",
-    className: "X-B",
+    className: "X.2",
     fridayDate: getRecentFriday(0),
     mosqueName: "Masjid Nurul Falah",
     mosqueAddress: "Jl. Anggrek No. 12",
@@ -119,7 +119,7 @@ const sampleSummaries = [
     id: "JUM-20261016-006",
     studentName: "Zacky Maulana",
     nisn: "0068891234",
-    className: "XI-MIPA 1",
+    className: "XI.1",
     fridayDate: getRecentFriday(0),
     mosqueName: "Masjid Agung Syuhada",
     mosqueAddress: "Jl. Pahlawan No. 1",
@@ -138,7 +138,7 @@ const sampleSummaries = [
     id: "JUM-20261016-007",
     studentName: "Rian Hidayatullah",
     nisn: "0069902341",
-    className: "XI-MIPA 1",
+    className: "XI.1",
     fridayDate: getRecentFriday(0),
     mosqueName: "Masjid Darussalam",
     mosqueAddress: "Jl. Melati Indah Blok B",
@@ -157,7 +157,7 @@ const sampleSummaries = [
     id: "JUM-20261016-008",
     studentName: "Aldi Saputra",
     nisn: "0065432190",
-    className: "XI-IPS 1",
+    className: "XI.2",
     fridayDate: getRecentFriday(0),
     mosqueName: "Masjid Babussalam",
     mosqueAddress: "Jl. Teratai No. 22",
@@ -215,7 +215,7 @@ const sampleSummaries = [
     id: "JUM-20261009-001",
     studentName: "Muhammad Farhan Pratama",
     nisn: "0078129410",
-    className: "X-A",
+    className: "X.1",
     fridayDate: getRecentFriday(1),
     mosqueName: "Masjid Al-Ikhlas",
     mosqueAddress: "Jl. Merpati No. 14",
@@ -256,7 +256,8 @@ function initStorage() {
   if (!localStorage.getItem("khatibku_summaries")) {
     localStorage.setItem("khatibku_summaries", JSON.stringify(sampleSummaries));
   }
-  if (!localStorage.getItem("khatibku_classes")) {
+  const storedClasses = localStorage.getItem("khatibku_classes");
+  if (!storedClasses || storedClasses.includes("X-A") || !storedClasses.includes("X.1")) {
     localStorage.setItem("khatibku_classes", JSON.stringify(DEFAULT_CLASSES));
   }
 }

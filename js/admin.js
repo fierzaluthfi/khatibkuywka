@@ -82,22 +82,34 @@ const AdminApp = {
     }
 
     const storedClasses = localStorage.getItem("khatibku_classes");
-    if (storedClasses) {
-      try { this.classes = JSON.parse(storedClasses); } catch (e) { this.classes = DEFAULT_CLASSES; }
-    } else {
+    if (!storedClasses || storedClasses.includes("X-A") || !storedClasses.includes("X.1")) {
       this.classes = typeof DEFAULT_CLASSES !== "undefined" ? DEFAULT_CLASSES : [
-        "X-A", "X-B", "X-C",
-        "XI-MIPA 1", "XI-MIPA 2", "XI-IPS 1", "XI-IPS 2",
-        "XII-MIPA 1", "XII-MIPA 2", "XII-IPS 1", "XII-IPS 2"
+        "X.1", "X.2", "X.3",
+        "XI.1", "XI.2", "XI.3",
+        "XII.1", "XII.2", "XII.3"
       ];
       localStorage.setItem("khatibku_classes", JSON.stringify(this.classes));
+    } else {
+      try { this.classes = JSON.parse(storedClasses); } catch (e) { this.classes = DEFAULT_CLASSES; }
     }
+
+    const normalizeClass = (c) => {
+      if (!c) return c;
+      const map = {
+        "X-A": "X.1", "X-B": "X.2", "X-C": "X.3",
+        "XI-MIPA 1": "XI.1", "XI-MIPA 2": "XI.2", "XI-IPS 1": "XI.3", "XI-IPS 2": "XI.3",
+        "XII-MIPA 1": "XII.1", "XII-MIPA 2": "XII.2", "XII-IPS 1": "XII.3", "XII-IPS 2": "XII.3"
+      };
+      return map[c] || c;
+    };
+    this.summaries.forEach(s => { s.className = normalizeClass(s.className); });
 
     // 2. Jika Supabase aktif, sinkronkan data cloud
     if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
       try {
         const cloudData = await SupabaseConfig.fetchSummaries();
         if (cloudData && Array.isArray(cloudData)) {
+          cloudData.forEach(s => { s.className = normalizeClass(s.className); });
           this.summaries = cloudData;
           localStorage.setItem("khatibku_summaries", JSON.stringify(this.summaries));
           this.showToast("Data tersinkronisasi langsung dengan Cloud Supabase", "success");
@@ -153,6 +165,17 @@ const AdminApp = {
     try {
       const cloudData = await SupabaseConfig.fetchSummaries();
       if (cloudData && Array.isArray(cloudData)) {
+        const normalizeClass = (c) => {
+          if (!c) return c;
+          const map = {
+            "X-A": "X.1", "X-B": "X.2", "X-C": "X.3",
+            "XI-MIPA 1": "XI.1", "XI-MIPA 2": "XI.2", "XI-IPS 1": "XI.3", "XI-IPS 2": "XI.3",
+            "XII-MIPA 1": "XII.1", "XII-MIPA 2": "XII.2", "XII-IPS 1": "XII.3", "XII-IPS 2": "XII.3"
+          };
+          return map[c] || c;
+        };
+        cloudData.forEach(s => { s.className = normalizeClass(s.className); });
+
         const previousIds = new Set(this.summaries.map(s => s.id));
         const newItems = cloudData.filter(item => !previousIds.has(item.id));
 

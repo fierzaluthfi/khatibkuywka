@@ -20,7 +20,7 @@ Website resmi SMA YWKA untuk pengumpulan tugas dan rekapitulasi nilai rangkuman 
 - **Tujuan:** Khusus untuk siswa mengisi dan mengumpulkan tugas rangkuman khutbah Jum'at setiap pekan.
 - **Privasi:** Siswa hanya melihat formulir mereka sendiri, tidak dapat melihat nilai atau mengedit data siswa lain.
 - **Fitur Siswa:**
-  - Pilihan kelas (X-A, X-B, XI-MIPA, XI-IPS, XII, dll.).
+  - Pilihan kelas (X.1, X.2, X.3, XI.1, XI.2, XI.3, XII.1, XII.2, XII.3).
   - Pengisian nama masjid, alamat, dan penceramah/khatib.
   - Penulisan judul, dalil Al-Qur'an/hadits, isi rangkuman, dan komitmen aksi nyata.
   - Upload foto dokumentasi kehadiran masjid / catatan tangan dengan preview instan.
