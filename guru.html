@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal Master - Monitoring & Rekapitulasi Khutbah Jum'at SMA YWKA</title>
-  <meta name="description" content="Dashboard master guru dan wali kelas untuk memantau, memeriksa, dan menilai tugas rangkuman khutbah Jum'at siswa SMA YWKA per kelas.">
+  <title>Portal Master - Rekapitulasi Rangkuman Kultum SMA YWKA</title>
+  <meta name="description" content="Dashboard master guru dan pengawas untuk memantau, memeriksa, dan menilai tugas rangkuman kultum siswa SMA YWKA per kelas.">
   <link rel="icon" type="image/png" href="assets/logo-ywka.png">
 
   <!-- Google Fonts -->
@@ -22,7 +22,7 @@
     <div class="container top-announcement-content">
       <div style="display: flex; align-items: center; gap: 10px;">
         <span class="announcement-badge">PORTAL MASTER</span>
-        <span>Dashboard Pengajar & Wali Kelas • SMA YWKA</span>
+        <span>Dashboard Pengajar & Pengawas • SMA YWKA</span>
       </div>
       <div class="top-actions">
         <button id="btnOpenDbModal" class="theme-toggle-btn" title="Pengaturan Database Cloud Supabase" style="border: 1px solid rgba(255,255,255,0.25);">
@@ -46,7 +46,7 @@
         </div>
         <div class="brand-info">
           <h1>KhatibKu <span style="display:inline; color: var(--ywka-orange);">Master</span></h1>
-          <span>Monitoring & Rekapitulasi SMAS YWKA</span>
+          <span>Rekapitulasi Rangkuman Kultum</span>
         </div>
       </div>
 
@@ -69,8 +69,8 @@
   <section class="hero-banner">
     <div class="container hero-content">
       <div class="hero-text">
-        <h2>Dashboard Rekapitulasi Rangkuman Jum'at</h2>
-        <p>Memantau kehadiran dan isi rangkuman khutbah Jum'at dari seluruh siswa SMA YWKA berdasarkan masing-masing kelas secara terpusat.</p>
+        <h2>Rekapitulasi Rangkuman Kultum</h2>
+        <p>Memantau kehadiran, pengumpulan, dan penilaian tugas rangkuman kultum dari seluruh siswa SMA YWKA berdasarkan masing-masing kelas secara terpusat.</p>
       </div>
 
       <!-- Quick Metrics Counters -->
@@ -124,13 +124,13 @@
         <div class="filter-toolbar">
           <div class="search-box-wrapper">
             <span class="search-icon">🔍</span>
-            <input type="text" id="tableSearchInput" class="input-field" placeholder="Cari nama siswa, masjid, atau judul khutbah...">
+            <input type="text" id="tableSearchInput" class="input-field" placeholder="Cari nama siswa, masjid, atau judul kultum...">
           </div>
 
           <div class="filter-group-right">
-            <!-- Filter Tanggal Jum'at -->
+            <!-- Filter Tanggal Kultum -->
             <select id="filterFridayDate" class="select-field" style="width: auto; min-width: 190px;">
-              <option value="all">📅 Semua Tanggal Jum'at</option>
+              <option value="all">📅 Semua Tanggal Kultum</option>
             </select>
 
             <!-- Filter Status Penilaian -->
@@ -165,9 +165,30 @@
         </div>
 
         <!-- Indikator Jumlah Data -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 0.88rem; color: var(--text-muted);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.88rem; color: var(--text-muted); flex-wrap: wrap; gap: 8px;">
           <div id="filteredResultCount">Menampilkan 0 data rangkuman</div>
-          <div>Klik tombol <strong>Periksa</strong> untuk membaca tugas lengkap & memberikan nilai.</div>
+          <div>💡 Tips: Centang siswa untuk <strong>Beri Nilai Massal</strong> atau ketik nilai langsung di kolom <strong>Nilai</strong>.</div>
+        </div>
+
+        <!-- Toolbar Penilaian Massal (Batch Grading) -->
+        <div id="batchActionBar" class="batch-action-bar">
+          <div class="batch-action-left">
+            <label class="batch-select-all-label">
+              <input type="checkbox" id="selectAllCheckbox" onchange="AdminApp.toggleSelectAll(this.checked)" style="width: 17px; height: 17px; cursor: pointer;">
+              <span>Pilih Semua (<strong id="selectedCountText" style="color: var(--ywka-blue);">0</strong> dipilih)</span>
+            </label>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="AdminApp.selectPendingOnly()" title="Otomatis centang seluruh siswa yang statusnya belum dinilai">
+              ⏳ Pilih Yang Belum Dinilai
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnClearSelection" onclick="AdminApp.clearSelection()" style="display: none;">
+              ✕ Batalkan Pilihan
+            </button>
+          </div>
+          <div class="batch-action-right">
+            <button type="button" id="btnOpenBatchModal" class="btn btn-primary btn-sm" onclick="AdminApp.openBatchGradingModal()" disabled style="font-weight: 700; padding: 7px 16px;">
+              ⚡ Beri Nilai Massal (<span id="batchBtnCount">0</span>)
+            </button>
+          </div>
         </div>
 
         <!-- Tabel Rekapitulasi Rangkuman Siswa -->
@@ -175,15 +196,18 @@
           <table class="custom-table">
             <thead>
               <tr>
-                <th style="width: 40px; text-align: center;">No</th>
+                <th style="width: 38px; text-align: center;">
+                  <input type="checkbox" id="tableHeaderCheckbox" onchange="AdminApp.toggleSelectAll(this.checked)" title="Pilih Semua di Tabel" style="width: 17px; height: 17px; cursor: pointer;">
+                </th>
+                <th style="width: 36px; text-align: center;">No</th>
                 <th>Nama Siswa & NISN</th>
                 <th style="text-align: center;">Kelas</th>
-                <th>Tanggal Jum'at</th>
-                <th>Masjid & Khatib</th>
-                <th>Tema Khutbah</th>
+                <th>Tanggal Kultum</th>
+                <th>Masjid & Penceramah</th>
+                <th>Tema Kultum</th>
                 <th style="text-align: center;">Foto</th>
                 <th style="text-align: center;">Status</th>
-                <th style="text-align: center;">Nilai</th>
+                <th style="text-align: center; min-width: 95px;">Nilai</th>
                 <th style="text-align: center; width: 100px;">Aksi</th>
               </tr>
             </thead>
@@ -209,7 +233,7 @@
         <div class="card-header" style="margin-bottom: 24px;">
           <div>
             <h3 class="card-title">📊 Tingkat Partisipasi Pengumpulan Per Kelas</h3>
-            <p class="card-subtitle">Persentase pengumpulan tugas rangkuman khutbah Jum'at terhadap kuota kelas (32 siswa/kelas).</p>
+            <p class="card-subtitle">Persentase pengumpulan tugas rangkuman kultum terhadap kuota kelas (32 siswa/kelas).</p>
           </div>
         </div>
 
@@ -244,15 +268,15 @@
             <div id="modalMosqueInfo" class="detail-item-content">-</div>
           </div>
           <div class="detail-item-box" style="margin-bottom: 0;">
-            <div class="detail-item-title">📅 Tanggal & Khatib</div>
+            <div class="detail-item-title">📅 Tanggal & Penceramah</div>
             <div id="modalDateInfo" style="font-weight: 700; color: var(--ywka-blue);"></div>
             <div id="modalKhatibInfo" style="font-size: 0.85rem; color: var(--text-muted);"></div>
           </div>
         </div>
 
-        <!-- Tema Khutbah -->
+        <!-- Tema Kultum -->
         <div class="detail-item-box">
-          <div class="detail-item-title">📌 Tema / Judul Khutbah</div>
+          <div class="detail-item-title">📌 Tema / Judul Kultum</div>
           <div id="modalKhutbahTitle" class="detail-item-content" style="font-weight: 700; font-size: 1.05rem;">-</div>
         </div>
 
@@ -264,7 +288,7 @@
 
         <!-- Uraian Rangkuman -->
         <div class="detail-item-box">
-          <div class="detail-item-title">📝 Isi Rangkuman Khutbah</div>
+          <div class="detail-item-title">📝 Isi Rangkuman Kultum</div>
           <div id="modalSummaryText" class="detail-item-content">-</div>
         </div>
 
@@ -285,7 +309,7 @@
         <!-- Box Penilaian Guru -->
         <div class="grading-card">
           <h4 style="margin-bottom: 12px; color: var(--ywka-blue); font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
-            <span>✍️</span> Lembar Penilaian & Umpan Balik Guru
+            <span>✍️</span> Lembar Penilaian & Umpan Balik Pengawas
           </h4>
           
           <div style="display: grid; grid-template-columns: 140px 1fr; gap: 14px; margin-bottom: 12px;">
@@ -304,7 +328,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="modalInputFeedback">Catatan Guru / Umpan Balik</label>
+            <label class="form-label" for="modalInputFeedback">Catatan Pengawas / Umpan Balik</label>
             <textarea id="modalInputFeedback" class="textarea-field" style="min-height: 80px;" placeholder="Tuliskan apresiasi atau koreksi untuk siswa..."></textarea>
           </div>
         </div>
@@ -326,6 +350,94 @@
   </div>
 
   <!-- ===================================================================
+       MODAL: PENILAIAN MASSAL (BATCH GRADING)
+       =================================================================== -->
+  <div id="batchGradingModal" class="modal-backdrop">
+    <div class="modal-dialog" style="max-width: 580px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.5rem;">⚡</span>
+          <div>
+            <h3>Penilaian Massal (Batch Grading)</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Memasukkan nilai sekaligus untuk siswa terpilih</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="AdminApp.closeBatchGradingModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="batch-modal-info" style="background: rgba(0, 31, 184, 0.05); border: 1px solid var(--ywka-blue-border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px;">
+          <div style="font-weight: 700; color: var(--ywka-blue); margin-bottom: 6px;">
+            Target: <span id="batchModalCount">0</span> Siswa Terpilih
+          </div>
+          <div id="batchSelectedNamesList" style="max-height: 90px; overflow-y: auto; font-size: 0.82rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 6px;">
+            <!-- Chips nama siswa -->
+          </div>
+        </div>
+
+        <!-- Input Nilai Batch -->
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label class="form-label" for="batchInputScore">
+            Nilai untuk Seluruh Siswa Terpilih (0 - 100) <span class="required">*</span>
+          </label>
+          <input type="number" id="batchInputScore" class="input-field" min="0" max="100" placeholder="Contoh: 85" style="font-size: 1.15rem; font-weight: 800; text-align: center;">
+          
+          <!-- Preset Nilai Cepat -->
+          <div style="display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+            <span style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">Preset Cepat:</span>
+            <button type="button" class="preset-badge-btn" onclick="AdminApp.setBatchScorePreset(75)">75</button>
+            <button type="button" class="preset-badge-btn" onclick="AdminApp.setBatchScorePreset(80)">80</button>
+            <button type="button" class="preset-badge-btn" onclick="AdminApp.setBatchScorePreset(85)">85</button>
+            <button type="button" class="preset-badge-btn" onclick="AdminApp.setBatchScorePreset(88)">88</button>
+            <button type="button" class="preset-badge-btn" onclick="AdminApp.setBatchScorePreset(90)">90</button>
+            <button type="button" class="preset-badge-btn" onclick="AdminApp.setBatchScorePreset(95)">95</button>
+            <button type="button" class="preset-badge-btn" onclick="AdminApp.setBatchScorePreset(100)">100</button>
+          </div>
+        </div>
+
+        <!-- Catatan / Feedback Batch -->
+        <div class="form-group" style="margin-bottom: 16px;">
+          <label class="form-label" for="batchInputFeedback">
+            Catatan / Masukan Pengawas (Opsional)
+          </label>
+          <textarea id="batchInputFeedback" class="textarea-field" style="min-height: 70px;" placeholder="Tuliskan catatan apresiasi atau evaluasi untuk siswa terpilih..."></textarea>
+          
+          <!-- Preset Catatan Cepat -->
+          <div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap;">
+            <button type="button" class="preset-feedback-chip" onclick="AdminApp.setBatchFeedbackPreset('Rangkuman kultum lengkap dan tepat waktu. Bagus!')">
+              ✨ Lengkap & Bagus
+            </button>
+            <button type="button" class="preset-feedback-chip" onclick="AdminApp.setBatchFeedbackPreset('Catatan rapi dan materi tersampaikan dengan baik.')">
+              📝 Rapi & Baik
+            </button>
+            <button type="button" class="preset-feedback-chip" onclick="AdminApp.setBatchFeedbackPreset('Sudah diperiksa dan dinilai oleh pengawas.')">
+              ✓ Sudah Diperiksa
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Batch -->
+        <div class="form-group">
+          <label class="form-label" for="batchSelectStatus">Status Penilaian</label>
+          <select id="batchSelectStatus" class="select-field">
+            <option value="graded" selected>✅ Sudah Dinilai (Graded)</option>
+            <option value="pending">⏳ Menunggu Penilaian (Pending)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="AdminApp.closeBatchGradingModal()">
+          Batal
+        </button>
+        <button type="button" id="btnApplyBatchGrading" class="btn btn-primary" onclick="AdminApp.executeBatchGrading()">
+          💾 Terapkan & Simpan Nilai
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
        MODAL: KEAMANAN PIN AKSES GURU
        =================================================================== -->
   <div id="authModal" class="modal-backdrop">
@@ -338,7 +450,7 @@
         </div>
         <h3 style="color: var(--ywka-blue); margin-bottom: 6px;">Portal Master Guru</h3>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
-          Masukkan PIN Guru / Wali Kelas untuk membuka dashboard rekapitulasi nilai.
+          Masukkan PIN Guru / Wali Kelas untuk membuka rekapitulasi nilai rangkuman kultum.
         </p>
 
         <div class="form-group" style="text-align: left; margin-bottom: 14px;">

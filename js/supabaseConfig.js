@@ -243,7 +243,34 @@ const SupabaseConfig = {
     }
   },
 
-  // 4. Hapus rangkuman dari Supabase
+  // 4. Batch update nilai dan catatan beberapa rangkuman sekaligus
+  async batchUpdateSummaries(ids, updates) {
+    const client = this.getClient();
+    if (!client || !ids || ids.length === 0) return false;
+
+    try {
+      const dbUpdates = {};
+      if (updates.score !== undefined) dbUpdates.score = updates.score;
+      if (updates.feedback !== undefined) dbUpdates.feedback = updates.feedback;
+      if (updates.status !== undefined) dbUpdates.status = updates.status;
+
+      const { error } = await client
+        .from("friday_summaries")
+        .update(dbUpdates)
+        .in("id", ids);
+
+      if (error) {
+        console.error("Gagal batch update ke Supabase:", error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error("Error batch updating in Supabase:", err);
+      return false;
+    }
+  },
+
+  // 5. Hapus rangkuman dari Supabase
   async deleteSummary(id) {
     const client = this.getClient();
     if (!client) return false;

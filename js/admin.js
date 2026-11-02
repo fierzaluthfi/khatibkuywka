@@ -1,6 +1,7 @@
 /**
  * admin.js
- * Logika Portal Master (Guru & Wali Kelas) - Monitoring, Penilaian & Rekapitulasi Per Kelas
+ * Logika Portal Master (Guru & Pengawas) - Monitoring, Penilaian Massal (Batch Grading),
+ * Input Nilai Cepat & Rekapitulasi Rangkuman Kultum Per Kelas
  */
 
 const AdminApp = {
@@ -11,6 +12,7 @@ const AdminApp = {
   selectedStatusFilter: "all",
   searchQuery: "",
   currentViewingSummaryId: null,
+  selectedIds: new Set(),
 
   async init() {
     this.initTheme();
@@ -55,7 +57,7 @@ const AdminApp = {
     const pinError = document.getElementById("pinError");
     const pin = pinInput ? pinInput.value.trim() : "";
 
-    // Default PIN: "ywka2026" atau "guru123"
+    // Default PIN: "ywka2026" atau "guru123" atau "admin"
     if (pin === "ywka2026" || pin === "guru123" || pin === "admin") {
       sessionStorage.setItem("khatibku_admin_auth", "true");
       const authModal = document.getElementById("authModal");
@@ -190,6 +192,12 @@ const AdminApp = {
         this.summaries = cloudData;
         localStorage.setItem("khatibku_summaries", JSON.stringify(this.summaries));
 
+        // Bersihkan selectedIds yang mungkin sudah terhapus
+        const currentIdSet = new Set(this.summaries.map(s => s.id));
+        this.selectedIds.forEach(id => {
+          if (!currentIdSet.has(id)) this.selectedIds.delete(id);
+        });
+
         this.renderClassFilterPills();
         this.populateDateFilterDropdown();
         this.renderSummariesTable();
@@ -218,7 +226,7 @@ const AdminApp = {
   startAutoSync() {
     this.updateLastSyncTime();
 
-    // 1. Supabase Realtime (Deteksi perubahan data langsung dalam hitungan detik)
+    // 1. Supabase Realtime (Deteksi perubahan data langsung)
     if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
       SupabaseConfig.subscribeToSummaries((payload) => {
         console.log("Supabase Realtime event diterima:", payload);
@@ -226,7 +234,7 @@ const AdminApp = {
       });
     }
 
-    // 2. Interval background sync (Auto-refresh berkala setiap 15 detik sebagai fallback)
+    // 2. Interval background sync (Auto-refresh setiap 15 detik)
     if (this._syncInterval) clearInterval(this._syncInterval);
     this._syncInterval = setInterval(() => {
       this.refreshData(true);
@@ -273,7 +281,7 @@ const AdminApp = {
     dates.sort((a, b) => new Date(b) - new Date(a));
 
     const currentVal = this.selectedDateFilter;
-    select.innerHTML = '<option value="all">📅 Semua Tanggal Jum\'at</option>';
+    select.innerHTML = '<option value="all">📅 Semua Tanggal Kultum</option>';
     dates.forEach(d => {
       const formatted = new Date(d).toLocaleDateString("id-ID", {
         weekday: "short", day: "numeric", month: "short", year: "numeric"
@@ -311,6 +319,270 @@ const AdminApp = {
     });
   },
 
+  // =========================================================================
+  // SISTEM BATCH SELECTION & ACTION BAR
+  // =========================================================================
+  toggleRowSelection(id, isChecked) {
+    if (isChecked) {
+      this.selectedIds.add(id);
+    } else {
+      this.selectedIds.delete(id);
+    }
+
+    const tr = document.querySelector(`tr[data-row-id="${id}"]`);
+    if (tr) tr.classList.toggle("row-selected", isChecked);
+
+    this.updateBatchSelectionUI();
+  },
+
+  toggleSelectAll(isChecked) {
+    const filtered = this.getFilteredSummaries();
+    if (isChecked) {
+      filtered.forEach(s => this.selectedIds.add(s.id));
+    } else {
+      filtered.forEach(s => this.selectedIds.delete(s.id));
+    }
+    this.renderSummariesTable();
+  },
+
+  selectPendingOnly() {
+    const filtered = this.getFilteredSummaries();
+    const pendingItems = filtered.filter(s => s.status !== "graded" || s.score === null || s.score === undefined || s.score === "");
+
+    if (pendingItems.length === 0) {
+      this.showToast("Semua siswa pada filter saat ini sudah selesai dinilai!", "info");
+      return;
+    }
+
+    this.selectedIds.clear();
+    pendingItems.forEach(s => this.selectedIds.add(s.id));
+    this.renderSummariesTable();
+    this.showToast(`Berhasil memilih ${pendingItems.length} siswa yang belum dinilai.`, "success");
+  },
+
+  clearSelection() {
+    this.selectedIds.clear();
+    this.renderSummariesTable();
+  },
+
+  updateBatchSelectionUI() {
+    const count = this.selectedIds.size;
+    const badgeCount = document.getElementById("batchBtnCount");
+    const countText = document.getElementById("batchSelectionCountText");
+    const btnOpenBatch = document.getElementById("btnOpenBatchModal");
+    const btnClear = document.getElementById("btnClearSelection");
+    const headerCheckbox = document.getElementById("tableHeaderCheckbox");
+
+    if (badgeCount) badgeCount.textContent = count;
+    if (countText) {
+      countText.innerHTML = count > 0 
+        ? `<strong>${count}</strong> data terpilih` 
+        : `<strong>0</strong> terpilih`;
+    }
+    if (btnOpenBatch) {
+      btnOpenBatch.disabled = count === 0;
+    }
+    if (btnClear) {
+      btnClear.style.display = count > 0 ? "inline-flex" : "none";
+    }
+
+    const filtered = this.getFilteredSummaries();
+    if (headerCheckbox) {
+      if (filtered.length > 0 && filtered.every(s => this.selectedIds.has(s.id))) {
+        headerCheckbox.checked = true;
+        headerCheckbox.indeterminate = false;
+      } else if (count > 0 && filtered.some(s => this.selectedIds.has(s.id))) {
+        headerCheckbox.checked = false;
+        headerCheckbox.indeterminate = true;
+      } else {
+        headerCheckbox.checked = false;
+        headerCheckbox.indeterminate = false;
+      }
+    }
+  },
+
+  // =========================================================================
+  // INPUT NILAI CEPAT (INLINE GRADING SEPERTI SPREADSHEET)
+  // =========================================================================
+  quickSaveScore(id, rawVal, inputEl) {
+    const trimmed = String(rawVal).trim();
+    let parsedScore = null;
+
+    if (trimmed !== "") {
+      parsedScore = Number(trimmed);
+      if (isNaN(parsedScore) || parsedScore < 0 || parsedScore > 100) {
+        this.showToast("Nilai harus berupa angka 0 - 100", "warning");
+        if (inputEl) {
+          const item = this.summaries.find(s => s.id === id);
+          inputEl.value = (item && item.score !== null) ? item.score : "";
+        }
+        return;
+      }
+    }
+
+    const item = this.summaries.find(s => s.id === id);
+    if (!item) return;
+
+    // Jangan kirim request jika tidak ada perubahan nilai
+    if (item.score === parsedScore && ((parsedScore !== null && item.status === "graded") || (parsedScore === null && item.status === "pending"))) {
+      return;
+    }
+
+    item.score = parsedScore;
+    item.status = parsedScore !== null ? "graded" : "pending";
+    localStorage.setItem("khatibku_summaries", JSON.stringify(this.summaries));
+
+    if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+      SupabaseConfig.updateSummary(id, {
+        score: parsedScore,
+        status: item.status
+      });
+    }
+
+    if (inputEl) {
+      inputEl.classList.add("saved-highlight");
+      setTimeout(() => inputEl.classList.remove("saved-highlight"), 1000);
+    }
+
+    // Perbarui badge status pada baris yang bersangkutan tanpa re-render penuh
+    const tr = document.querySelector(`tr[data-row-id="${id}"]`);
+    if (tr) {
+      const statusTd = tr.querySelector(".cell-status");
+      if (statusTd) {
+        statusTd.innerHTML = item.status === "graded"
+          ? `<span class="badge-status graded">✓ Sudah Dinilai</span>`
+          : `<span class="badge-status pending">⏳ Menunggu</span>`;
+      }
+    }
+
+    this.updateTopMetrics();
+    this.updateClassStatistics();
+    this.renderClassFilterPills();
+    this.showToast(`Nilai ${item.studentName} berhasil disimpan: ${parsedScore ?? 'Dikosongkan'}`, "success");
+  },
+
+  // =========================================================================
+  // MODAL PENILAIAN MASSAL (BATCH GRADING)
+  // =========================================================================
+  openBatchGradingModal() {
+    if (this.selectedIds.size === 0) {
+      this.showToast("Centang minimal satu siswa untuk dinilai secara massal.", "warning");
+      return;
+    }
+
+    const modal = document.getElementById("batchGradingModal");
+    const countEl = document.getElementById("batchModalCount");
+    const namesList = document.getElementById("batchSelectedNamesList");
+
+    if (countEl) countEl.textContent = this.selectedIds.size;
+
+    if (namesList) {
+      const selectedItems = this.summaries.filter(s => this.selectedIds.has(s.id));
+      namesList.innerHTML = selectedItems.map(s => `
+        <span style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 3px 8px; border-radius: 6px; font-size: 0.78rem; font-weight: 600;">
+          ${escapeHtml(s.studentName)} (${escapeHtml(s.className)})
+        </span>
+      `).join("");
+    }
+
+    const scoreInput = document.getElementById("batchInputScore");
+    if (scoreInput) scoreInput.value = "";
+
+    const feedbackInput = document.getElementById("batchInputFeedback");
+    if (feedbackInput) feedbackInput.value = "";
+
+    if (modal) modal.classList.add("active");
+  },
+
+  closeBatchGradingModal() {
+    const modal = document.getElementById("batchGradingModal");
+    if (modal) modal.classList.remove("active");
+  },
+
+  setBatchScorePreset(val) {
+    const input = document.getElementById("batchInputScore");
+    if (input) {
+      input.value = val;
+      input.focus();
+    }
+  },
+
+  setBatchFeedbackPreset(text) {
+    const input = document.getElementById("batchInputFeedback");
+    if (input) {
+      input.value = text;
+      input.focus();
+    }
+  },
+
+  async executeBatchGrading() {
+    if (this.selectedIds.size === 0) return;
+
+    const scoreInput = document.getElementById("batchInputScore");
+    const feedbackInput = document.getElementById("batchInputFeedback");
+    const statusSelect = document.getElementById("batchSelectStatus");
+
+    const scoreVal = scoreInput ? scoreInput.value.trim() : "";
+    const feedbackVal = feedbackInput ? feedbackInput.value.trim() : "";
+    const statusVal = statusSelect ? statusSelect.value : "graded";
+
+    let parsedScore = null;
+    if (scoreVal !== "") {
+      parsedScore = Number(scoreVal);
+      if (isNaN(parsedScore) || parsedScore < 0 || parsedScore > 100) {
+        this.showToast("Nilai harus berupa angka 0 - 100", "warning");
+        if (scoreInput) scoreInput.focus();
+        return;
+      }
+    }
+
+    const btnApply = document.getElementById("btnApplyBatchGrading");
+    if (btnApply) {
+      btnApply.disabled = true;
+      btnApply.textContent = "⏳ Menyimpan ke Cloud...";
+    }
+
+    const ids = Array.from(this.selectedIds);
+    const updates = { status: statusVal };
+    if (parsedScore !== null) updates.score = parsedScore;
+    if (feedbackVal !== "") updates.feedback = feedbackVal;
+
+    // 1. Update in-memory & LocalStorage
+    this.summaries.forEach(s => {
+      if (this.selectedIds.has(s.id)) {
+        if (parsedScore !== null) s.score = parsedScore;
+        if (feedbackVal !== "") s.feedback = feedbackVal;
+        s.status = statusVal;
+      }
+    });
+    localStorage.setItem("khatibku_summaries", JSON.stringify(this.summaries));
+
+    // 2. Batch update ke Supabase Cloud
+    if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+      try {
+        await SupabaseConfig.batchUpdateSummaries(ids, updates);
+      } catch (err) {
+        console.warn("Gagal update batch ke Supabase:", err);
+      }
+    }
+
+    if (btnApply) {
+      btnApply.disabled = false;
+      btnApply.textContent = "💾 Terapkan & Simpan Nilai";
+    }
+
+    this.closeBatchGradingModal();
+    this.clearSelection();
+    this.renderSummariesTable();
+    this.updateTopMetrics();
+    this.updateClassStatistics();
+    this.renderClassFilterPills();
+    this.showToast(`Berhasil menerapkan nilai untuk ${ids.length} siswa secara serentak!`, "success");
+  },
+
+  // =========================================================================
+  // TABEL UTAMA & MODAL DETAIL PERIKSA SISWA
+  // =========================================================================
   renderSummariesTable() {
     const tbody = document.getElementById("summariesTableBody");
     const emptyState = document.getElementById("emptyStateTable");
@@ -327,6 +599,7 @@ const AdminApp = {
     if (filtered.length === 0) {
       tbody.innerHTML = "";
       if (emptyState) emptyState.style.display = "block";
+      this.updateBatchSelectionUI();
       return;
     }
 
@@ -335,6 +608,7 @@ const AdminApp = {
     filtered.sort((a, b) => new Date(b.submittedAt || b.fridayDate) - new Date(a.submittedAt || a.fridayDate));
 
     tbody.innerHTML = filtered.map((item, index) => {
+      const isSelected = this.selectedIds.has(item.id);
       const formattedDate = item.fridayDate ? new Date(item.fridayDate).toLocaleDateString("id-ID", {
         day: "numeric", month: "short", year: "numeric"
       }) : "-";
@@ -343,17 +617,17 @@ const AdminApp = {
         ? `<span class="badge-status graded">✓ Sudah Dinilai</span>`
         : `<span class="badge-status pending">⏳ Menunggu</span>`;
 
-      const scoreDisplay = (item.score !== null && item.score !== undefined)
-        ? `<span class="score-pill">${item.score}</span>`
-        : `<span class="score-pill empty">-</span>`;
-
+      const scoreVal = (item.score !== null && item.score !== undefined) ? item.score : "";
       const hasPhoto = !!item.photoUrl || !!item.hasPhoto;
       const photoIcon = hasPhoto
-        ? `<span onclick="AdminApp.openReviewModal('${escapeHtml(item.id)}')" title="Ada Foto Bukti (Klik untuk Melihat)" style="color: var(--ywka-blue); font-size: 1.15rem; cursor: pointer;">📷</span>`
+        ? `<span onclick="AdminApp.openReviewModal('${escapeHtml(item.id)}')" title="Ada Foto Bukti Dokumentasi (Klik untuk Melihat)" style="color: var(--ywka-blue); font-size: 1.15rem; cursor: pointer;">📷</span>`
         : `<span title="Tanpa Foto" style="color: var(--text-light);">-</span>`;
 
       return `
-        <tr>
+        <tr data-row-id="${escapeHtml(item.id)}" class="${isSelected ? 'row-selected' : ''}">
+          <td style="text-align: center;">
+            <input type="checkbox" class="row-checkbox" data-id="${escapeHtml(item.id)}" ${isSelected ? 'checked' : ''} onchange="AdminApp.toggleRowSelection('${escapeHtml(item.id)}', this.checked)" title="Pilih siswa ini" style="width: 17px; height: 17px; cursor: pointer;">
+          </td>
           <td style="text-align: center; color: var(--text-muted); font-weight: 700;">${index + 1}</td>
           <td>
             <strong style="color: var(--text-main); font-size: 0.95rem;">${escapeHtml(item.studentName)}</strong>
@@ -367,27 +641,31 @@ const AdminApp = {
           <td style="font-size: 0.85rem; color: var(--text-muted);">${formattedDate}</td>
           <td>
             <div style="font-weight: 700; color: var(--text-main);">${escapeHtml(item.mosqueName)}</div>
-            <div style="font-size: 0.78rem; color: var(--text-muted);">Khatib: ${escapeHtml(item.khatibName || '-')}</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">Penceramah: ${escapeHtml(item.khatibName || '-')}</div>
           </td>
           <td>
-            <div style="font-weight: 700; color: var(--text-main); max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(item.khutbahTitle)}">
+            <div style="font-weight: 700; color: var(--text-main); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(item.khutbahTitle)}">
               ${escapeHtml(item.khutbahTitle)}
             </div>
-            <div style="font-size: 0.78rem; color: var(--text-muted); max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-              ${escapeHtml(item.summaryText.substring(0, 50))}...
+            <div style="font-size: 0.78rem; color: var(--text-muted); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ${escapeHtml((item.summaryText || "").substring(0, 50))}...
             </div>
           </td>
           <td style="text-align: center;">${photoIcon}</td>
-          <td style="text-align: center;">${statusBadge}</td>
-          <td style="text-align: center;">${scoreDisplay}</td>
+          <td class="cell-status" style="text-align: center;">${statusBadge}</td>
           <td style="text-align: center;">
-            <button class="btn btn-primary btn-sm" onclick="AdminApp.openReviewModal('${item.id}')" title="Periksa Tugas & Beri Nilai">
+            <input type="number" min="0" max="100" class="inline-score-input" value="${scoreVal}" placeholder="-" title="Ketik angka nilai lalu Enter untuk simpan langsung" onchange="AdminApp.quickSaveScore('${escapeHtml(item.id)}', this.value, this)" onkeydown="if(event.key==='Enter'){this.blur();}">
+          </td>
+          <td style="text-align: center;">
+            <button class="btn btn-primary btn-sm" onclick="AdminApp.openReviewModal('${escapeHtml(item.id)}')" title="Periksa Tugas & Catatan Detail">
               🔍 Periksa
             </button>
           </td>
         </tr>
       `;
     }).join("");
+
+    this.updateBatchSelectionUI();
   },
 
   updateTopMetrics() {
@@ -397,10 +675,10 @@ const AdminApp = {
 
     const total = this.summaries.length;
     const graded = this.summaries.filter(s => s.status === "graded").length;
-    const scored = this.summaries.filter(s => s.score !== null && s.score !== undefined);
+    const scored = this.summaries.filter(s => s.score !== null && s.score !== undefined && s.score !== "");
     const avg = scored.length > 0
       ? (scored.reduce((a, b) => a + Number(b.score), 0) / scored.length).toFixed(1)
-      : "0";
+      : "0.0";
 
     if (totalEl) totalEl.textContent = total;
     if (gradedEl) gradedEl.textContent = graded;
@@ -418,7 +696,7 @@ const AdminApp = {
       const count = items.length;
       const pct = Math.min(Math.round((count / targetPerClass) * 100), 100);
       const gradedCount = items.filter(s => s.status === "graded").length;
-      const scoredItems = items.filter(s => s.score !== null);
+      const scoredItems = items.filter(s => s.score !== null && s.score !== undefined && s.score !== "");
       const avg = scoredItems.length > 0
         ? (scoredItems.reduce((a, b) => a + Number(b.score), 0) / scoredItems.length).toFixed(1)
         : "-";
@@ -552,6 +830,7 @@ const AdminApp = {
 
     if (confirm("Apakah Anda yakin ingin menghapus data laporan siswa ini?")) {
       const delId = this.currentViewingSummaryId;
+      this.selectedIds.delete(delId);
       this.summaries = this.summaries.filter(s => s.id !== delId);
       localStorage.setItem("khatibku_summaries", JSON.stringify(this.summaries));
 

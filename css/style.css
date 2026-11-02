@@ -1189,6 +1189,123 @@ button, input, select, textarea {
   to { transform: rotate(360deg); }
 }
 
+/* Batch Action Bar & Controls */
+.batch-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(0, 31, 184, 0.05);
+  border: 1px solid var(--ywka-blue-border);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 14px;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .batch-action-bar {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.batch-action-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.batch-select-all-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.custom-table tbody tr.row-selected {
+  background-color: rgba(0, 31, 184, 0.08) !important;
+}
+
+[data-theme="dark"] .custom-table tbody tr.row-selected {
+  background-color: rgba(37, 99, 235, 0.18) !important;
+}
+
+.inline-score-input {
+  width: 58px;
+  text-align: center;
+  padding: 5px 3px;
+  border-radius: 6px;
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--ywka-blue);
+  font-weight: 800;
+  font-size: 0.92rem;
+  transition: all 0.2s ease;
+}
+
+.inline-score-input:focus {
+  outline: none;
+  border-color: var(--ywka-blue);
+  box-shadow: 0 0 0 3px rgba(0, 31, 184, 0.2);
+}
+
+.inline-score-input.saved-highlight {
+  border-color: var(--ywka-green) !important;
+  background-color: var(--ywka-green-light) !important;
+}
+
+.preset-badge-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--ywka-blue);
+  font-weight: 800;
+  font-size: 0.82rem;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-badge-btn:hover {
+  background: var(--ywka-blue);
+  color: #fff;
+  border-color: var(--ywka-blue);
+  transform: translateY(-1px);
+}
+
+.preset-feedback-chip {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  padding: 5px 11px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-feedback-chip:hover {
+  background: rgba(0, 31, 184, 0.08);
+  color: var(--ywka-blue);
+  border-color: var(--ywka-blue-border);
+}
+
+.student-chip-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
 /* Print Media Rules */
 @media print {
   .top-announcement,

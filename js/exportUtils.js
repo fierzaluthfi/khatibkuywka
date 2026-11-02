@@ -27,7 +27,7 @@ const ExportUtils = {
       "Nama Masjid",
       "Alamat Masjid",
       "Nama Khatib",
-      "Tema / Judul Khutbah",
+      "Tema / Judul Kultum",
       "Isi Rangkuman",
       "Dalil / Ayat / Hadits",
       "Pesan Moral & Aksi Nyata",
@@ -72,7 +72,7 @@ const ExportUtils = {
     const link = document.createElement("a");
     const cleanClassName = className.replace(/\s+/g, "_");
     link.setAttribute("href", url);
-    link.setAttribute("download", `Rekap_Khutbah_Jumat_${cleanClassName}_${date}.csv`);
+    link.setAttribute("download", `Rekap_Rangkuman_Kultum_${cleanClassName}_${date}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -126,7 +126,7 @@ const ExportUtils = {
       <html lang="id">
       <head>
         <meta charset="UTF-8">
-        <title>Laporan Rangkuman Khutbah Jum'at - ${className}</title>
+        <title>Laporan Rangkuman Kultum - ${className}</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -223,7 +223,7 @@ const ExportUtils = {
 
         <div class="header-kop">
           <h2>SMA YWKA</h2>
-          <h3>REKAPITULASI PELAPORAN TUGAS RANGKUMAN KHUTBAH JUM'AT</h3>
+          <h3>REKAPITULASI PELAPORAN TUGAS RANGKUMAN KULTUM</h3>
           <p>Tahun Ajaran 2026/2027 • Mata Pelajaran Pendidikan Agama Islam & Budi Pekerti</p>
         </div>
 
@@ -245,7 +245,7 @@ const ExportUtils = {
               <th style="width: 160px;">Nama Siswa</th>
               <th style="width: 60px;">Kelas</th>
               <th style="width: 130px;">Masjid</th>
-              <th>Tema / Judul Khutbah</th>
+              <th>Tema / Judul Kultum</th>
               <th style="width: 70px;">Status</th>
               <th style="width: 50px;">Nilai</th>
               <th style="width: 140px;">Catatan Guru</th>
