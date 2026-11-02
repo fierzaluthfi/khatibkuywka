@@ -37,15 +37,18 @@ async function initData() {
   const storedSummaries = localStorage.getItem("khatibku_summaries");
   if (storedSummaries) {
     try {
-      AppState.summaries = JSON.parse(storedSummaries);
+      const parsed = JSON.parse(storedSummaries);
+      AppState.summaries = (parsed || []).filter(item => {
+        if (!item || !item.id) return false;
+        return !item.id.startsWith("JUM-20261016-") && !item.id.startsWith("JUM-20261009-");
+      });
     } catch (e) {
-      console.error("Error parsing summaries from localStorage", e);
-      AppState.summaries = sampleSummaries || [];
+      AppState.summaries = [];
     }
   } else {
-    AppState.summaries = sampleSummaries || [];
-    saveSummaries();
+    AppState.summaries = [];
   }
+  saveSummaries();
 
   const storedClasses = localStorage.getItem("khatibku_classes");
   if (storedClasses) {
@@ -405,9 +408,33 @@ function handlePhotoSelect(e) {
 
   const reader = new FileReader();
   reader.onload = (event) => {
-    AppState.activePhotoBase64 = event.target.result;
-    renderPhotoPreview();
-    showToast("Foto berhasil dimuat", "success");
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const MAX_DIM = 960;
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > MAX_DIM) {
+          height = Math.round((height * MAX_DIM) / width);
+          width = MAX_DIM;
+        }
+      } else {
+        if (height > MAX_DIM) {
+          width = Math.round((width * MAX_DIM) / height);
+          height = MAX_DIM;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+      AppState.activePhotoBase64 = canvas.toDataURL("image/jpeg", 0.72);
+      renderPhotoPreview();
+      showToast("Foto berhasil dimuat & dioptimalkan", "success");
+    };
+    img.onerror = () => showToast("Gagal memproses gambar", "error");
+    img.src = event.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -461,8 +488,9 @@ function handleSummarySubmit(e) {
     return;
   }
 
-  if (summaryText.length < 50) {
-    showToast("Isi rangkuman khutbah minimal 50 karakter agar bermakna", "warning");
+  const wordList = summaryText.split(/\s+/).filter(Boolean);
+  if (wordList.length < 20) {
+    showToast(`Isi rangkuman minimal 20 kata agar bermakna (saat ini baru ${wordList.length} kata)`, "warning");
     return;
   }
 
@@ -774,11 +802,15 @@ function setupEventListeners() {
   const summaryTextarea = document.getElementById("inputSummaryText");
   const charCounter = document.getElementById("charCounter");
   if (summaryTextarea && charCounter) {
-    summaryTextarea.addEventListener("input", () => {
-      const len = summaryTextarea.value.length;
-      charCounter.textContent = `${len} karakter (minimal 50)`;
-      charCounter.style.color = len >= 50 ? "var(--primary)" : "var(--text-light)";
-    });
+    const updateWordCount = () => {
+      const text = summaryTextarea.value.trim();
+      const words = text ? text.split(/\s+/).filter(Boolean) : [];
+      const count = words.length;
+      charCounter.textContent = `${count} kata (minimal 20 kata)`;
+      charCounter.style.color = count >= 20 ? "var(--primary)" : "var(--text-light)";
+    };
+    summaryTextarea.addEventListener("input", updateWordCount);
+    updateWordCount();
   }
 
   // Search Filter

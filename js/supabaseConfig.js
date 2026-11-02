@@ -122,22 +122,24 @@ const SupabaseConfig = {
       quranHadith: row.quran_hadith || "",
       moralAction: row.moral_action || "",
       photoUrl: row.photo_url || "",
-      score: row.score !== null ? Number(row.score) : null,
+      hasPhoto: !!row.photo_url,
+      score: row.score !== null && row.score !== undefined ? Number(row.score) : null,
       feedback: row.feedback || "",
       status: row.status || "pending",
       submittedAt: row.submitted_at || row.created_at
     };
   },
 
-  // 1. Fetch seluruh rangkuman dari Supabase
+  // 1. Fetch seluruh rangkuman dari Supabase (dioptimalkan tanpa memuat foto multi-MB secara bulk agar tidak timeout)
   async fetchSummaries() {
     const client = this.getClient();
     if (!client) return null;
 
     try {
+      // Ambil kolom tanpa photo_url agar query sangat cepat dan stabil
       const { data, error } = await client
         .from("friday_summaries")
-        .select("*")
+        .select("id, student_name, nisn, class_name, friday_date, mosque_name, mosque_address, khatib_name, khutbah_title, summary_text, quran_hadith, moral_action, score, feedback, status, submitted_at")
         .order("submitted_at", { ascending: false });
 
       if (error) {
@@ -145,9 +147,49 @@ const SupabaseConfig = {
         return null;
       }
 
-      return data.map(this.fromDbFormat);
+      // Deteksi ID yang memiliki foto secara cepat dan efisien
+      const photoIdSet = new Set();
+      try {
+        const { data: photoData } = await client
+          .from("friday_summaries")
+          .select("id")
+          .not("photo_url", "is", null)
+          .neq("photo_url", "");
+
+        if (photoData && Array.isArray(photoData)) {
+          photoData.forEach(p => photoIdSet.add(p.id));
+        }
+      } catch (pErr) {
+        console.warn("Pengecekan status foto:", pErr);
+      }
+
+      return data.map(row => {
+        const item = this.fromDbFormat(row);
+        item.hasPhoto = photoIdSet.has(item.id);
+        return item;
+      });
     } catch (err) {
       console.warn("Supabase request failed:", err);
+      return null;
+    }
+  },
+
+  // Ambil foto spesifik untuk satu siswa saat guru membuka modal pemeriksaan
+  async fetchSummaryPhoto(id) {
+    const client = this.getClient();
+    if (!client || !id) return null;
+
+    try {
+      const { data, error } = await client
+        .from("friday_summaries")
+        .select("photo_url")
+        .eq("id", id)
+        .single();
+
+      if (error || !data) return null;
+      return data.photo_url || "";
+    } catch (err) {
+      console.warn("Gagal memuat foto dari Supabase:", err);
       return null;
     }
   },

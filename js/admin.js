@@ -72,14 +72,22 @@ const AdminApp = {
   async initData() {
     this.updateDbBadgeUI();
 
-    // 1. Baca data lokal
+    // 1. Baca data lokal dan pastikan sample lama bulan Oktober dibersihkan
     const stored = localStorage.getItem("khatibku_summaries");
     if (stored) {
-      try { this.summaries = JSON.parse(stored); } catch (e) { this.summaries = sampleSummaries || []; }
+      try {
+        const parsed = JSON.parse(stored);
+        this.summaries = (parsed || []).filter(item => {
+          if (!item || !item.id) return false;
+          return !item.id.startsWith("JUM-20261016-") && !item.id.startsWith("JUM-20261009-");
+        });
+      } catch (e) {
+        this.summaries = [];
+      }
     } else {
-      this.summaries = typeof sampleSummaries !== "undefined" ? sampleSummaries : [];
-      localStorage.setItem("khatibku_summaries", JSON.stringify(this.summaries));
+      this.summaries = [];
     }
+    localStorage.setItem("khatibku_summaries", JSON.stringify(this.summaries));
 
     const storedClasses = localStorage.getItem("khatibku_classes");
     if (!storedClasses || storedClasses.includes("X-A") || !storedClasses.includes("X.1")) {
@@ -264,6 +272,7 @@ const AdminApp = {
     const dates = [...new Set(this.summaries.map(s => s.fridayDate))].filter(Boolean);
     dates.sort((a, b) => new Date(b) - new Date(a));
 
+    const currentVal = this.selectedDateFilter;
     select.innerHTML = '<option value="all">📅 Semua Tanggal Jum\'at</option>';
     dates.forEach(d => {
       const formatted = new Date(d).toLocaleDateString("id-ID", {
@@ -274,6 +283,13 @@ const AdminApp = {
       opt.textContent = formatted;
       select.appendChild(opt);
     });
+
+    if (dates.includes(currentVal)) {
+      select.value = currentVal;
+    } else {
+      select.value = "all";
+      this.selectedDateFilter = "all";
+    }
   },
 
   getFilteredSummaries() {
@@ -331,8 +347,9 @@ const AdminApp = {
         ? `<span class="score-pill">${item.score}</span>`
         : `<span class="score-pill empty">-</span>`;
 
-      const photoIcon = item.photoUrl
-        ? `<span title="Ada Foto Bukti" style="color: var(--ywka-blue); font-size: 1.15rem; cursor: pointer;">📷</span>`
+      const hasPhoto = !!item.photoUrl || !!item.hasPhoto;
+      const photoIcon = hasPhoto
+        ? `<span onclick="AdminApp.openReviewModal('${escapeHtml(item.id)}')" title="Ada Foto Bukti (Klik untuk Melihat)" style="color: var(--ywka-blue); font-size: 1.15rem; cursor: pointer;">📷</span>`
         : `<span title="Tanpa Foto" style="color: var(--text-light);">-</span>`;
 
       return `
@@ -455,6 +472,25 @@ const AdminApp = {
     if (item.photoUrl) {
       photoImg.src = item.photoUrl;
       photoWrapper.style.display = "block";
+    } else if (item.hasPhoto) {
+      photoWrapper.style.display = "block";
+      photoImg.src = "";
+      photoImg.alt = "Memuat foto bukti dokumentasi...";
+      if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
+        SupabaseConfig.fetchSummaryPhoto(item.id).then(url => {
+          if (url) {
+            item.photoUrl = url;
+            if (this.currentViewingSummaryId === item.id) {
+              photoImg.src = url;
+              photoImg.alt = "Foto Bukti Siswa";
+            }
+          } else {
+            if (this.currentViewingSummaryId === item.id) {
+              photoWrapper.style.display = "none";
+            }
+          }
+        });
+      }
     } else {
       photoWrapper.style.display = "none";
     }

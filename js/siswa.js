@@ -75,24 +75,56 @@ const SiswaApp = {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      this.showToast("Ukuran foto maksimal 5 MB", "warning");
+    if (file.size > 10 * 1024 * 1024) {
+      this.showToast("Ukuran foto maksimal 10 MB", "warning");
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      this.activePhotoBase64 = event.target.result;
-      const previewWrapper = document.getElementById("photoPreviewContainer");
-      const promptWrapper = document.getElementById("photoUploadPrompt");
-      const img = document.getElementById("photoPreviewImg");
+      const img = new Image();
+      img.onload = () => {
+        // Kompresi dan resize foto secara client-side agar ringan (sekitar 50-80 KB)
+        const canvas = document.createElement("canvas");
+        const MAX_DIM = 960;
+        let width = img.width;
+        let height = img.height;
 
-      if (img && previewWrapper && promptWrapper) {
-        img.src = this.activePhotoBase64;
-        previewWrapper.style.display = "inline-block";
-        promptWrapper.style.display = "none";
-        this.showToast("Foto berhasil dimuat", "success");
-      }
+        if (width > height) {
+          if (width > MAX_DIM) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          }
+        } else {
+          if (height > MAX_DIM) {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Kualitas JPEG 0.72 sangat jernih namun ukuran file berkurang >95%
+        this.activePhotoBase64 = canvas.toDataURL("image/jpeg", 0.72);
+
+        const previewWrapper = document.getElementById("photoPreviewContainer");
+        const promptWrapper = document.getElementById("photoUploadPrompt");
+        const previewImg = document.getElementById("photoPreviewImg");
+
+        if (previewImg && previewWrapper && promptWrapper) {
+          previewImg.src = this.activePhotoBase64;
+          previewWrapper.style.display = "inline-block";
+          promptWrapper.style.display = "none";
+          this.showToast("Foto berhasil dimuat & dioptimalkan", "success");
+        }
+      };
+      img.onerror = () => {
+        this.showToast("Gagal memproses gambar", "warning");
+      };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   },
@@ -125,8 +157,10 @@ const SiswaApp = {
       return;
     }
 
-    if (summaryText.length < 50) {
-      this.showToast("Isi rangkuman minimal 50 karakter agar bermakna", "warning");
+    // Validasi batas minimal 20 kata untuk rangkuman khutbah
+    const wordList = summaryText.split(/\s+/).filter(Boolean);
+    if (wordList.length < 20) {
+      this.showToast(`Isi rangkuman minimal 20 kata agar bermakna (saat ini baru ${wordList.length} kata)`, "warning");
       return;
     }
 
@@ -154,13 +188,15 @@ const SiswaApp = {
       status: "pending"
     };
 
-    // 1. Simpan ke Local Storage
+    // 1. Simpan ke Local Storage (tanpa foto besar agar hemat ruang)
     let list = [];
     try {
       list = JSON.parse(localStorage.getItem("khatibku_summaries")) || [];
     } catch (err) {
       list = [];
     }
+    // Hapus data sample lama jika ada
+    list = list.filter(item => item && item.id && !item.id.startsWith("JUM-20261016-") && !item.id.startsWith("JUM-20261009-"));
     list.unshift(newSummary);
     localStorage.setItem("khatibku_summaries", JSON.stringify(list));
 
@@ -183,6 +219,14 @@ const SiswaApp = {
     document.getElementById("formSubmitSummary").reset();
     this.removePhoto();
     this.initFridayDate();
+    
+    // Reset counter kata
+    const counter = document.getElementById("charCounter");
+    if (counter) {
+      counter.textContent = "0 kata (minimal 20 kata)";
+      counter.style.color = "var(--text-light)";
+    }
+
     this.showToast("Alhamdulillah! Rangkuman khutbah berhasil terkirim.", "success");
   },
 
@@ -267,11 +311,16 @@ const SiswaApp = {
     const textarea = document.getElementById("inputSummaryText");
     const counter = document.getElementById("charCounter");
     if (textarea && counter) {
-      textarea.addEventListener("input", () => {
-        const len = textarea.value.length;
-        counter.textContent = `${len} karakter (minimal 50)`;
-        counter.style.color = len >= 50 ? "var(--ywka-green)" : "var(--text-light)";
-      });
+      const updateWordCount = () => {
+        const text = textarea.value.trim();
+        const words = text ? text.split(/\s+/).filter(Boolean) : [];
+        const count = words.length;
+        counter.textContent = `${count} kata (minimal 20 kata)`;
+        counter.style.color = count >= 20 ? "var(--ywka-green)" : "var(--text-light)";
+      };
+
+      textarea.addEventListener("input", updateWordCount);
+      updateWordCount();
     }
   }
 };
