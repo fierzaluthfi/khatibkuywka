@@ -97,7 +97,7 @@
            TAB 1: FORMULIR PENGISIAN RANGKUMAN SISWA
            =================================================================== -->
       <div id="tab-form" class="tab-panel active" role="tabpanel">
-        <form id="formSubmitSummary">
+        <form id="formSubmitSummary" novalidate>
           
           <!-- Card 1: Identitas Siswa -->
           <div class="card">
@@ -222,20 +222,20 @@
               </div>
             </div>
 
-            <div class="photo-upload-zone" onclick="document.getElementById('inputPhotoFile').click()">
-              <input type="file" id="inputPhotoFile" accept="image/*" style="display: none;">
+            <label for="inputPhotoFile" class="photo-upload-zone" id="photoUploadLabel" style="display: block; cursor: pointer;">
+              <input type="file" id="inputPhotoFile" accept="image/jpeg,image/png,image/webp,image/jpg" style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none;">
               
               <div id="photoUploadPrompt">
                 <div class="upload-icon">📷</div>
-                <div class="upload-text">Klik di sini untuk memilih foto dari galeri / kamera</div>
-                <div class="upload-subtext">Format JPG, PNG, WEBP (Maksimal 5 MB)</div>
+                <div class="upload-text">Ketuk di sini untuk memilih foto dari galeri / kamera</div>
+                <div class="upload-subtext">Format JPG, PNG, WEBP (Maksimal 10 MB)</div>
               </div>
 
               <div id="photoPreviewContainer" class="photo-preview-wrapper" style="display: none;">
                 <img id="photoPreviewImg" class="photo-preview-img" src="" alt="Preview Bukti Siswa">
                 <button type="button" id="btnRemovePhoto" class="btn-remove-photo" title="Hapus Foto">✕</button>
               </div>
-            </div>
+            </label>
           </div>
 
           <!-- Tombol Aksi -->
@@ -243,7 +243,7 @@
             <button type="reset" class="btn btn-secondary">
               🔄 Kosongkan Form
             </button>
-            <button type="submit" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
+            <button type="submit" id="btnSubmitSummary" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
               🚀 Kirim Rangkuman Khutbah
             </button>
           </div>

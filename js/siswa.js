@@ -1,6 +1,7 @@
 /**
  * siswa.js
  * Logika khusus Portal Siswa untuk pengisian dan pengiriman rangkuman khutbah Jum'at
+ * Dioptimalkan untuk perangkat mobile (iOS Safari / iPhone & Android)
  */
 
 const SiswaApp = {
@@ -60,73 +61,124 @@ const SiswaApp = {
     if (dateInput) {
       const d = new Date();
       const day = d.getDay();
+      // Jum'at adalah hari ke-5
       const diff = day >= 5 ? day - 5 : day + 2;
       const target = new Date(d.getTime() - (diff * 24 * 60 * 60 * 1000));
       dateInput.value = target.toISOString().split("T")[0];
     }
   },
 
+  resetPhotoPrompt() {
+    const promptWrapper = document.getElementById("photoUploadPrompt");
+    if (promptWrapper) {
+      promptWrapper.innerHTML = `
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">Ketuk di sini untuk memilih foto dari galeri / kamera</div>
+        <div class="upload-subtext">Format JPG, PNG, WEBP (Maksimal 10 MB)</div>
+      `;
+      promptWrapper.style.display = "block";
+    }
+  },
+
   handlePhotoSelect(e) {
-    const file = e.target.files[0];
+    const file = e.target.files && e.target.files[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      this.showToast("Harap pilih berkas gambar (JPG, PNG, WEBP)", "warning");
+    // Validasi tipe berkas gambar (mendukung image/* dan ekstensi umum iPhone HEIC/HEIF/JPG)
+    const isImage = (file.type && file.type.startsWith("image/")) || file.name.match(/\.(jpe?g|png|webp|heic|heif)$/i);
+    if (!isImage) {
+      this.showToast("Harap pilih berkas foto / gambar", "warning");
+      this.resetPhotoPrompt();
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      this.showToast("Ukuran foto maksimal 10 MB", "warning");
+    if (file.size > 15 * 1024 * 1024) {
+      this.showToast("Ukuran foto maksimal 15 MB", "warning");
+      this.resetPhotoPrompt();
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
+    // Tampilkan status proses
+    const promptWrapper = document.getElementById("photoUploadPrompt");
+    if (promptWrapper) {
+      promptWrapper.innerHTML = `
+        <div class="upload-icon">⏳</div>
+        <div class="upload-text">Mengoptimalkan foto...</div>
+        <div class="upload-subtext">Mohon tunggu sebentar</div>
+      `;
+    }
+
+    // Kompresi foto secara cerdas menggunakan Canvas & ObjectURL (sangat hemat memori di Safari iOS)
+    const processImageSource = (src, cleanupCallback) => {
       const img = new Image();
       img.onload = () => {
-        // Kompresi dan resize foto secara client-side agar ringan (sekitar 50-80 KB)
-        const canvas = document.createElement("canvas");
-        const MAX_DIM = 960;
-        let width = img.width;
-        let height = img.height;
+        if (cleanupCallback) cleanupCallback();
+        try {
+          const canvas = document.createElement("canvas");
+          const MAX_DIM = 960;
+          let width = img.width;
+          let height = img.height;
 
-        if (width > height) {
-          if (width > MAX_DIM) {
-            height = Math.round((height * MAX_DIM) / width);
-            width = MAX_DIM;
+          if (width > height) {
+            if (width > MAX_DIM) {
+              height = Math.round((height * MAX_DIM) / width);
+              width = MAX_DIM;
+            }
+          } else {
+            if (height > MAX_DIM) {
+              width = Math.round((width * MAX_DIM) / height);
+              height = MAX_DIM;
+            }
           }
-        } else {
-          if (height > MAX_DIM) {
-            width = Math.round((width * MAX_DIM) / height);
-            height = MAX_DIM;
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Output JPEG 0.72 sangat tajam dan ukuran hemat (< 80 KB)
+          this.activePhotoBase64 = canvas.toDataURL("image/jpeg", 0.72);
+
+          const previewWrapper = document.getElementById("photoPreviewContainer");
+          const previewImg = document.getElementById("photoPreviewImg");
+
+          if (previewImg && previewWrapper && promptWrapper) {
+            previewImg.src = this.activePhotoBase64;
+            previewWrapper.style.display = "inline-block";
+            promptWrapper.style.display = "none";
+            this.showToast("Foto berhasil dimuat & dioptimalkan", "success");
           }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Kualitas JPEG 0.72 sangat jernih namun ukuran file berkurang >95%
-        this.activePhotoBase64 = canvas.toDataURL("image/jpeg", 0.72);
-
-        const previewWrapper = document.getElementById("photoPreviewContainer");
-        const promptWrapper = document.getElementById("photoUploadPrompt");
-        const previewImg = document.getElementById("photoPreviewImg");
-
-        if (previewImg && previewWrapper && promptWrapper) {
-          previewImg.src = this.activePhotoBase64;
-          previewWrapper.style.display = "inline-block";
-          promptWrapper.style.display = "none";
-          this.showToast("Foto berhasil dimuat & dioptimalkan", "success");
+        } catch (err) {
+          console.error("Canvas compression error:", err);
+          this.showToast("Gagal memproses resolusi foto", "warning");
+          this.resetPhotoPrompt();
         }
       };
+
       img.onerror = () => {
-        this.showToast("Gagal memproses gambar", "warning");
+        if (cleanupCallback) cleanupCallback();
+        console.warn("Gagal render gambar melalui Image element");
+        this.showToast("Format gambar tidak didukung langsung oleh browser Anda", "warning");
+        this.resetPhotoPrompt();
       };
-      img.src = event.target.result;
+
+      img.src = src;
     };
-    reader.readAsDataURL(file);
+
+    // Jalankan via URL.createObjectURL terlebih dahulu (paling efisien di mobile)
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      processImageSource(objectUrl, () => URL.revokeObjectURL(objectUrl));
+    } catch (e) {
+      // Fallback ke FileReader jika createObjectURL diblokir
+      const reader = new FileReader();
+      reader.onload = (re) => processImageSource(re.target.result);
+      reader.onerror = () => {
+        this.showToast("Gagal membaca berkas foto", "warning");
+        this.resetPhotoPrompt();
+      };
+      reader.readAsDataURL(file);
+    }
   },
 
   removePhoto() {
@@ -134,34 +186,96 @@ const SiswaApp = {
     const fileInput = document.getElementById("inputPhotoFile");
     if (fileInput) fileInput.value = "";
     const previewWrapper = document.getElementById("photoPreviewContainer");
-    const promptWrapper = document.getElementById("photoUploadPrompt");
     if (previewWrapper) previewWrapper.style.display = "none";
-    if (promptWrapper) promptWrapper.style.display = "block";
+    this.resetPhotoPrompt();
   },
 
   async handleSubmit(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
-    const studentName = document.getElementById("inputStudentName").value.trim();
-    const className = document.getElementById("inputClass").value;
-    const fridayDate = document.getElementById("inputFridayDate").value;
-    const mosqueName = document.getElementById("inputMosqueName").value.trim();
-    const mosqueAddress = document.getElementById("inputMosqueAddress").value.trim();
-    const khatibName = document.getElementById("inputKhatibName").value.trim();
-    const khutbahTitle = document.getElementById("inputKhutbahTitle").value.trim();
-    const summaryText = document.getElementById("inputSummaryText").value.trim();
-    const moralAction = document.getElementById("inputMoralAction").value.trim();
+    // Hapus tanda error lama
+    document.querySelectorAll(".input-field.input-error, .select-field.input-error, .textarea-field.input-error").forEach(el => {
+      el.classList.remove("input-error");
+    });
 
-    if (!studentName || !className || !fridayDate || !mosqueName || !khutbahTitle || !summaryText) {
-      this.showToast("Harap lengkapi semua kolom wajib (*)", "warning");
+    const nameInput = document.getElementById("inputStudentName");
+    const classInput = document.getElementById("inputClass");
+    const dateInput = document.getElementById("inputFridayDate");
+    const mosqueInput = document.getElementById("inputMosqueName");
+    const mosqueAddressInput = document.getElementById("inputMosqueAddress");
+    const khatibInput = document.getElementById("inputKhatibName");
+    const titleInput = document.getElementById("inputKhutbahTitle");
+    const summaryInput = document.getElementById("inputSummaryText");
+    const moralInput = document.getElementById("inputMoralAction");
+
+    const studentName = nameInput ? nameInput.value.trim() : "";
+    const className = classInput ? classInput.value : "";
+    const fridayDate = dateInput ? dateInput.value : "";
+    const mosqueName = mosqueInput ? mosqueInput.value.trim() : "";
+    const mosqueAddress = mosqueAddressInput ? mosqueAddressInput.value.trim() : "";
+    const khatibName = khatibInput ? khatibInput.value.trim() : "";
+    const khutbahTitle = titleInput ? titleInput.value.trim() : "";
+    const summaryText = summaryInput ? summaryInput.value.trim() : "";
+    const moralAction = moralInput ? moralInput.value.trim() : "";
+
+    // Fungsi pembantu penanda error dengan fokus dan scroll otomatis
+    const markError = (inputEl, message) => {
+      if (inputEl) {
+        inputEl.classList.add("input-error");
+        inputEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => inputEl.focus(), 200);
+      }
+      this.showToast(message, "warning");
+    };
+
+    // Validasi field wajib
+    if (!studentName) {
+      markError(nameInput, "Harap isi Nama Lengkap Siswa terlebih dahulu");
+      return;
+    }
+
+    if (!className) {
+      markError(classInput, "Harap pilih Kelas Anda");
+      return;
+    }
+
+    if (!fridayDate) {
+      markError(dateInput, "Harap tentukan Tanggal Pelaksanaan Jum'at");
+      return;
+    }
+
+    if (!mosqueName) {
+      markError(mosqueInput, "Harap isi Nama Masjid / Musholla");
+      return;
+    }
+
+    if (!khutbahTitle) {
+      markError(titleInput, "Harap isi Tema / Judul Khutbah Jum'at");
+      return;
+    }
+
+    if (!summaryText) {
+      markError(summaryInput, "Harap tuliskan Uraian Rangkuman Khutbah");
       return;
     }
 
     // Validasi batas minimal 20 kata untuk rangkuman khutbah
     const wordList = summaryText.split(/\s+/).filter(Boolean);
     if (wordList.length < 20) {
-      this.showToast(`Isi rangkuman minimal 20 kata agar bermakna (saat ini baru ${wordList.length} kata)`, "warning");
+      const sisa = 20 - wordList.length;
+      markError(summaryInput, `Isi rangkuman minimal 20 kata (saat ini baru ${wordList.length} kata). Tambahkan ${sisa} kata lagi.`);
       return;
+    }
+
+    // Kunci tombol submit dan tampilkan status loading
+    const submitBtn = document.getElementById("btnSubmitSummary") || document.querySelector("button[type='submit']");
+    let originalBtnHtml = "🚀 Kirim Rangkuman Khutbah";
+    if (submitBtn) {
+      originalBtnHtml = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `⏳ Mengirim Rangkuman...`;
+      submitBtn.style.opacity = "0.75";
+      submitBtn.style.cursor = "not-allowed";
     }
 
     const cleanDateStr = fridayDate.replace(/-/g, "");
@@ -188,23 +302,30 @@ const SiswaApp = {
       status: "pending"
     };
 
-    // 1. Simpan ke Local Storage (tanpa foto besar agar hemat ruang)
-    let list = [];
+    // 1. Simpan ke Local Storage dengan proteksi QuotaExceededError di Safari iOS
     try {
-      list = JSON.parse(localStorage.getItem("khatibku_summaries")) || [];
-    } catch (err) {
-      list = [];
+      let list = [];
+      try {
+        list = JSON.parse(localStorage.getItem("khatibku_summaries")) || [];
+      } catch (err) {
+        list = [];
+      }
+      list = list.filter(item => item && item.id && !item.id.startsWith("JUM-20261016-") && !item.id.startsWith("JUM-20261009-"));
+
+      // Di localStorage simpan salinan tanpa base64 foto besar agar tidak melebihi kuota 5MB Safari
+      const localCopy = { ...newSummary, photoUrl: newSummary.photoUrl ? "HAS_PHOTO" : "" };
+      list.unshift(localCopy);
+      localStorage.setItem("khatibku_summaries", JSON.stringify(list));
+    } catch (storageErr) {
+      console.warn("Penyimpanan lokal penuh/dibatasi di Safari:", storageErr);
     }
-    // Hapus data sample lama jika ada
-    list = list.filter(item => item && item.id && !item.id.startsWith("JUM-20261016-") && !item.id.startsWith("JUM-20261009-"));
-    list.unshift(newSummary);
-    localStorage.setItem("khatibku_summaries", JSON.stringify(list));
 
     // 2. Simpan ke Cloud Supabase (Otomatis ke Database Sekolah)
+    let cloudSuccess = false;
     if (typeof SupabaseConfig !== "undefined" && SupabaseConfig.isConnected()) {
       try {
-        const ok = await SupabaseConfig.insertSummary(newSummary);
-        if (ok) {
+        cloudSuccess = await SupabaseConfig.insertSummary(newSummary);
+        if (cloudSuccess) {
           console.log("Rangkuman berhasil tersimpan ke Cloud Supabase");
         }
       } catch (err) {
@@ -212,14 +333,23 @@ const SiswaApp = {
       }
     }
 
+    // Kembalikan status tombol
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHtml;
+      submitBtn.style.opacity = "1";
+      submitBtn.style.cursor = "pointer";
+    }
+
     // Tampilkan Tanda Terima Resmi
     this.showReceipt(newSummary);
 
     // Reset Form
-    document.getElementById("formSubmitSummary").reset();
+    const form = document.getElementById("formSubmitSummary");
+    if (form) form.reset();
     this.removePhoto();
     this.initFridayDate();
-    
+
     // Reset counter kata
     const counter = document.getElementById("charCounter");
     if (counter) {
@@ -269,11 +399,11 @@ const SiswaApp = {
     container.appendChild(toast);
 
     setTimeout(() => {
-      toast.style.animation = "slideInRight 0.25s ease reverse";
+      toast.style.animation = "slideInUp 0.25s ease reverse";
       setTimeout(() => {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
       }, 250);
-    }, 3500);
+    }, 4000);
   },
 
   switchTab(tabId) {
@@ -303,11 +433,13 @@ const SiswaApp = {
     const removeBtn = document.getElementById("btnRemovePhoto");
     if (removeBtn) {
       removeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
         this.removePhoto();
       });
     }
 
+    // Dynamic word counter dengan pesan yang jelas saat mengetik
     const textarea = document.getElementById("inputSummaryText");
     const counter = document.getElementById("charCounter");
     if (textarea && counter) {
@@ -315,13 +447,34 @@ const SiswaApp = {
         const text = textarea.value.trim();
         const words = text ? text.split(/\s+/).filter(Boolean) : [];
         const count = words.length;
-        counter.textContent = `${count} kata (minimal 20 kata)`;
-        counter.style.color = count >= 20 ? "var(--ywka-green)" : "var(--text-light)";
+        if (count === 0) {
+          counter.textContent = "0 kata (minimal 20 kata)";
+          counter.style.color = "var(--text-light)";
+        } else if (count < 20) {
+          counter.textContent = `${count} / 20 kata (Kurang ${20 - count} kata lagi)`;
+          counter.style.color = "var(--ywka-orange)";
+        } else {
+          counter.textContent = `✓ ${count} kata (Memenuhi syarat minimal 20 kata)`;
+          counter.style.color = "var(--ywka-green)";
+        }
       };
 
       textarea.addEventListener("input", updateWordCount);
       updateWordCount();
     }
+
+    // Hapus efek error merah segera saat siswa mulai mengisi input
+    const inputsToWatch = [
+      "inputStudentName", "inputClass", "inputFridayDate",
+      "inputMosqueName", "inputKhutbahTitle", "inputSummaryText"
+    ];
+    inputsToWatch.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("input", () => el.classList.remove("input-error"));
+        el.addEventListener("change", () => el.classList.remove("input-error"));
+      }
+    });
   }
 };
 
