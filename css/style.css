@@ -1349,6 +1349,355 @@ button, input, select, textarea {
   border-color: var(--ywka-blue-border);
 }
 
+/* ==========================================================================
+   DAILY PROGRESS TRACKER & LIVE WEEKLY RECAP GRAPH (SENIN - JUM'AT)
+   ========================================================================== */
+
+.daily-tracker-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.daily-tracker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.live-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.today-date-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ywka-blue);
+}
+
+/* Weekly 5-Day Bar Chart Grid */
+.weekly-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin: 18px 0 24px 0;
+}
+
+.day-chart-col {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.day-chart-col:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--ywka-blue-border);
+}
+
+.day-chart-col.is-today {
+  background: rgba(0, 31, 184, 0.04);
+  border: 2px solid var(--ywka-blue);
+  box-shadow: 0 4px 20px rgba(0, 31, 184, 0.15);
+}
+
+.day-col-header {
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.day-col-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.day-chart-col.is-today .day-col-name {
+  color: var(--ywka-blue);
+}
+
+.day-col-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.today-badge-micro {
+  background: var(--ywka-orange);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  display: inline-block;
+  animation: pulse-orange 2s infinite;
+}
+
+@keyframes pulse-orange {
+  0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.6); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(249, 115, 22, 0); }
+  100% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(249, 115, 22, 0); }
+}
+
+/* Day Bar Track & Fill */
+.day-bar-track {
+  width: 100%;
+  max-width: 68px;
+  height: 150px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 5px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .day-bar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.day-bar-fill {
+  width: 100%;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #3b82f6, var(--ywka-blue));
+  min-height: 6px;
+  transition: height 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.day-chart-col.is-today .day-bar-fill {
+  background: linear-gradient(180deg, #fb923c, var(--ywka-orange));
+  box-shadow: 0 0 14px rgba(249, 115, 22, 0.45);
+}
+
+/* Shimmer Light Reflection Effect on Bar */
+.day-bar-fill::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%);
+  animation: barShimmer 2.5s infinite;
+}
+
+@keyframes barShimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Day Bar Footer & Count */
+.day-col-footer {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.day-count-pill {
+  display: inline-block;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 99px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.day-chart-col.is-today .day-count-pill {
+  color: var(--ywka-blue);
+  border-color: var(--ywka-blue-border);
+  background: #ffffff;
+}
+
+[data-theme="dark"] .day-chart-col.is-today .day-count-pill {
+  background: #1e293b;
+}
+
+.day-submeta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* Daily Summary Strip (4 Cards below weekly chart) */
+.daily-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.strip-item {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.strip-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.strip-icon.orange { background: var(--ywka-orange-light); }
+.strip-icon.blue { background: var(--ywka-blue-light); }
+.strip-icon.green { background: var(--ywka-green-light); }
+.strip-icon.purple { background: rgba(147, 51, 234, 0.12); }
+
+.strip-content span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.strip-content strong {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+/* Segmented Control for Class View Mode */
+.mode-toggle-group {
+  display: inline-flex;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  gap: 4px;
+}
+
+.mode-toggle-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-toggle-btn:hover {
+  color: var(--text-main);
+}
+
+.mode-toggle-btn.active {
+  background: var(--ywka-blue);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 31, 184, 0.3);
+}
+
+/* Mini Day Chips inside Class Cards */
+.mini-days-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.mini-day-chip {
+  flex: 1;
+  text-align: center;
+  background: var(--bg-card-subtle);
+  padding: 4px 2px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.mini-day-chip.has-count {
+  background: var(--ywka-blue-light);
+  color: var(--ywka-blue);
+  font-weight: 800;
+  border-color: var(--ywka-blue-border);
+}
+
+.mini-day-chip.is-today {
+  border-color: var(--ywka-orange);
+  color: var(--ywka-orange);
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .daily-summary-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .weekly-chart-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .weekly-chart-grid .day-chart-col:last-child {
+    grid-column: span 2;
+  }
+  .daily-summary-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
 .student-chip-tag {
   display: inline-flex;
   align-items: center;

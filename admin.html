@@ -96,6 +96,15 @@
             <strong id="statAvgScore">0.0</strong>
           </div>
         </div>
+        <div class="stat-chip" style="border: 1px solid var(--ywka-blue-border); background: var(--ywka-blue-light);">
+          <div class="stat-chip-icon blue">⚡</div>
+          <div class="stat-chip-info">
+            <span style="display: flex; align-items: center; gap: 4px; color: var(--ywka-blue); font-weight: 700;">
+              Hari Ini <span class="live-dot" style="width: 7px; height: 7px;"></span>
+            </span>
+            <strong id="statTodaySubmissions" style="color: var(--ywka-blue);">0</strong>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -136,6 +145,7 @@
             <!-- Filter Status Penilaian -->
             <select id="filterStatus" class="select-field" style="width: auto; min-width: 160px;">
               <option value="all">⚡ Semua Status</option>
+              <option value="today">📅 Hanya Disetor Hari Ini (Live)</option>
               <option value="pending">⏳ Menunggu Penilaian</option>
               <option value="graded">✅ Sudah Dinilai</option>
             </select>
@@ -230,17 +240,62 @@
            TAB 2: MONITORING PROGRES & KEAKTIFAN PER KELAS
            =================================================================== -->
       <div id="tab-statistik" class="tab-panel" role="tabpanel">
-        <div class="card-header" style="margin-bottom: 24px;">
-          <div>
-            <h3 class="card-title">📊 Tingkat Partisipasi Pengumpulan Per Kelas</h3>
-            <p class="card-subtitle">Persentase pengumpulan tugas rangkuman kultum terhadap kuota kelas (32 siswa/kelas).</p>
+        
+        <!-- CARD 1: GRAFIK PROGRESS LIVE HARIAN (SENIN s.d. JUM'AT) -->
+        <div class="card daily-tracker-card" style="margin-bottom: 24px;">
+          <div class="daily-tracker-header">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h3 class="card-title" style="margin-bottom: 0;">📈 Grafik Pergerakan Laporan Harian (Senin s.d. Jum'at)</h3>
+                <span class="live-status-pill">
+                  <span class="live-dot" style="width: 7px; height: 7px;"></span> LIVE REALTIME
+                </span>
+              </div>
+              <p class="card-subtitle" style="margin-top: 6px;">
+                Pantauan pergerakan live per hari (reset otomatis setiap hari pukul 00:00 WIB) dengan rekapan lengkap tersimpan rapi sampai batas akhir hari Jum'at.
+              </p>
+            </div>
+            <div id="currentDayBadge" class="today-date-badge">
+              <!-- Diisi JavaScript -->
+            </div>
+          </div>
+
+          <!-- Container Grafik Batang 5 Hari (Senin - Jum'at) -->
+          <div id="weeklyChartContainer" class="weekly-chart-wrapper">
+            <!-- Diisi otomatis secara dinamis oleh JavaScript -->
+          </div>
+
+          <!-- Strip Indikator Ringkasan Harian -->
+          <div id="dailySummaryStrip" class="daily-summary-strip">
+            <!-- Diisi otomatis oleh JavaScript -->
           </div>
         </div>
 
-        <!-- Grid Progress Per Kelas -->
-        <div id="classProgressGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px;">
-          <!-- Diisi otomatis oleh JavaScript -->
+        <!-- CARD 2: PROGRESS PER KELAS & MODE TOGGLE -->
+        <div class="card">
+          <div class="card-header" style="margin-bottom: 20px; flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 class="card-title">📊 Tingkat Partisipasi Pengumpulan Per Kelas</h3>
+              <p class="card-subtitle">Persentase pengumpulan tugas rangkuman kultum terhadap kuota kelas (32 siswa/kelas).</p>
+            </div>
+
+            <!-- Segmented Control Toggle: Hari Ini vs Akumulasi s.d. Jum'at -->
+            <div class="mode-toggle-group" role="group" aria-label="Mode Tampilan Grafik Kelas">
+              <button type="button" id="btnModeToday" class="mode-toggle-btn" onclick="AdminApp.setClassProgressMode('today')">
+                ⚡ Hari Ini (Reset Harian)
+              </button>
+              <button type="button" id="btnModeCumulative" class="mode-toggle-btn active" onclick="AdminApp.setClassProgressMode('cumulative')">
+                📊 Akumulasi (s.d. Jum'at)
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid Progress Per Kelas -->
+          <div id="classProgressGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px;">
+            <!-- Diisi otomatis oleh JavaScript -->
+          </div>
         </div>
+
       </div>
 
     </div>
